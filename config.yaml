@@ -1,0 +1,33 @@
+global_settings:
+  data_dir: ./data
+  result_dir: ./results
+
+extractor:
+  backbone:
+    resnet:
+      input: 256
+      output: 2048
+    efficientnet:
+      input: 256
+      output: 1000
+  dataset:
+    blur_kernel: 7
+    blur_sigma: 3
+    batch_size: 64
+  device: cuda
+
+reduction:
+  TSNE:
+    n_components: 2
+    n_iter: 5000
+    init: pca
+  UMAP:
+    n_neighbors: 30
+    min_dist: 0.01
+
+clustering:
+  KMEANS:
+    n_clusters: 6
+  DBSCAN:
+    eps: 2
+    min_samples: 5
