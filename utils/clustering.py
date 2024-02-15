@@ -5,15 +5,24 @@ from sklearn.cluster import DBSCAN, KMeans
 
 class ClusterAlgo():
     def __init__(self) -> None:
-        self.method = None
-        self.algo = None
+        self._method = None
+        self._algo = None
         self.labels = None
+
+    @property
+    def method(self):
+        return self._method
+    
+    @method.setter
+    def method(self, _):
+        raise AttributeError("Directly modification of method disabled.")
+
 
     def set_algo(self, method: str, configs):
         valid_methods = {"KMEANS": KMeans, "DBSCAN": DBSCAN}
         assert method in valid_methods, f"Unknown clustering algorithm: {method}."
-        self.method = method
-        self.algo = valid_methods[method](**configs[method])
+        self._method = method
+        self._algo = valid_methods[method](**configs[method])
 
         return self
     
@@ -21,8 +30,8 @@ class ClusterAlgo():
         """
         Display the current configuration settings of the algorithm
         """
-        if self.algo:
-            print(json.dumps(self.algo.get_params(), indent=4))
+        if self._algo:
+            print(json.dumps(self._algo.get_params(), indent=4))
         else:
             print("No algorithm configured.")
 
@@ -36,7 +45,7 @@ class ClusterAlgo():
         Returns:
             np.ndarray: clustering labels
         """
-        assert self.algo is not None, "Please set the algorithm first."
-        self.algo.fit(X_reduced)
-        self.labels = self.algo.labels_
+        assert self._algo is not None, "Please set the algorithm first."
+        self._algo.fit(X_reduced)
+        self.labels = self._algo.labels_
         return self.labels
