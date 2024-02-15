@@ -6,8 +6,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from utils.feature_extract import feature_extract
-from utils import ClusterAlgo, DimReducer
+from utils import ClusterAlgo, DimReducer, FeatureExtrator
 
 
 def load_config(filename):
@@ -36,12 +35,13 @@ def main(dest_dir: str):
     if not os.path.exists((src_path := os.path.join(data_dir, dest_dir))):
         raise FileExistsError(f"Can't find {src_path}.")
 
-    backbone = "efficientnet"
+    backbone = "resnet"
     reduction_method = "UMAP"
     cluster_method = "DBSCAN"
 
     
-    X, images = feature_extract(path=src_path, backbone=backbone, configs=configs['extractor'])
+    extractor = FeatureExtrator(configs=configs['extractor'])
+    X, images = extractor.extract(path=src_path)
 
     reducer = DimReducer().set_algo(reduction_method, configs['reduction'])
     X_reduced = reducer.apply(X)
