@@ -8,12 +8,12 @@ from umap import UMAP
 class DimReducer():
     def __init__(self) -> None:
         self.method = None
-        self.algo = None
+        self._algo = None
         self.configs = dict()
 
     def display_configs(self):
-        if self.algo:
-            print(json.dumps(self.algo.get_params(), indent=4))
+        if self._algo:
+            print(json.dumps(self._algo.get_params(), indent=4))
         else:
             print("No algorithm configured.")
 
@@ -21,7 +21,7 @@ class DimReducer():
         valid_methods = {"TSNE": TSNE, "UMAP": UMAP}
         assert method in valid_methods, f"Unknown reduction method: {method}."
         self.method = method
-        self.algo = valid_methods[method](**configs[method])
+        self._algo = valid_methods[method](**configs[method])
         return self
     
     def apply(self, X: np.ndarray, init_dim: int=100) -> np.ndarray:
@@ -35,8 +35,8 @@ class DimReducer():
         Returns:
             np.ndarray: (n_samples, out_features)
         """
-        assert self.algo is not None, "Please set algorithm first."
+        assert self._algo is not None, "Please set algorithm first."
         if self.method == "TSNE":
             X = PCA(n_components=min(len(X), init_dim)).fit_transform(X)
-        X_reduced = self.algo.fit_transform(X)
+        X_reduced = self._algo.fit_transform(X)
         return X_reduced
