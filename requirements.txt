@@ -1,0 +1,10 @@
+pyyaml
+pyinputplus
+pandas
+plotly
+scikit-learn
+pillow
+opencv-python
+tqdm
+umap-learn
+pyarrow
