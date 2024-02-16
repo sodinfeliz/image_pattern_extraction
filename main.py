@@ -4,10 +4,10 @@ import shutil
 import pandas as pd
 import pyinputplus as pyip
 
-from utils import ClusterAlgo, DimReducer, FeatureExtrator
-from utils.draw import DrawResult
-from utils.prompt import (directory_prompt, extraction_prompt, 
-                          reduction_prompt, clustering_prompt, output_prompt)
+from src import ClusterAlgo, DimReducer, FeatureExtrator
+from src.draw import DrawResult
+from src.prompt import (directory_prompt, extraction_prompt, 
+                        reduction_prompt, clustering_prompt, output_prompt)
 
 
 def load_config(filename):
@@ -54,13 +54,16 @@ class MainProcess():
         self.start()
 
     def proceed(self):
-        print(f"\n{MainProcess._STEP_DICT[self.step].capitalize()} step completed. " + 
-               "What would you like to do next?")
-        response = pyip.inputMenu(
-            choices=['Next', 'Repeat', 'Back'],
-            prompt="Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:\n",
-            numbered=True
-        )
+        if MainProcess._STEP_DICT[self.step] in ["extraction", "output"]:
+            response = "Next"
+        else:
+            print(f"\n{MainProcess._STEP_DICT[self.step].capitalize()} step completed. " + 
+                   "What would you like to do next?")
+            response = pyip.inputMenu(
+                choices=['Next', 'Repeat', 'Back'],
+                prompt="Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:\n",
+                numbered=True
+            )
         self.hline()
         if response == "Next":
             self.step += 1
@@ -68,7 +71,7 @@ class MainProcess():
             self.step = max(self.step-1, 1)
 
     def hline(self):
-        print("==========================================================\n")
+        print("\n==========================================================\n")
 
     def input_step(self):
         self.dirname = directory_prompt(data_dir=self.data_dir)
@@ -153,7 +156,6 @@ class MainProcess():
 
 
 if __name__ == "__main__":
-    # main()
     process = MainProcess()
     process.start()
 
