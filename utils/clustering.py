@@ -17,9 +17,8 @@ class ClusterAlgo():
     def method(self, _):
         raise AttributeError("Directly modification of method disabled.")
 
-
     def set_algo(self, method: str, configs):
-        valid_methods = {"KMEANS": KMeans, "DBSCAN": DBSCAN}
+        valid_methods = {"K-Means": KMeans, "DBSCAN": DBSCAN}
         assert method in valid_methods, f"Unknown clustering algorithm: {method}."
         self._method = method
         self._algo = valid_methods[method](**configs[method])

@@ -56,7 +56,7 @@ class FeatureExtrator():
         )
         features = np.empty((0, self.configs['backbone'][self.model.backbone]['output']))
         with torch.no_grad():
-            for batch in tqdm(dataloader, desc='Running the model inference'):
+            for batch in tqdm(dataloader, desc='Extracting features: '):
                 images = batch.to(self.configs['device'])
                 out = self.model.predict(images)
                 features = np.concatenate((features, out))

@@ -17,7 +17,7 @@ extractor:
   device: cuda
 
 reduction:
-  TSNE:
+  t-SNE:
     n_components: 2
     n_iter: 5000
     init: pca
@@ -26,7 +26,7 @@ reduction:
     min_dist: 0.01
 
 clustering:
-  KMEANS:
+  K-Means:
     n_clusters: 6
   DBSCAN:
     eps: 2

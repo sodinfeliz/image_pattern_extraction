@@ -1,12 +1,13 @@
 import os
 import yaml
-import cv2
 import shutil
 import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import pyinputplus as pyip
+
 from utils import ClusterAlgo, DimReducer, FeatureExtrator
+from utils.draw import DrawResult
+from utils.prompt import (directory_prompt, extraction_prompt, 
+                          reduction_prompt, clustering_prompt, output_prompt)
 
 
 def load_config(filename):
@@ -15,102 +16,144 @@ def load_config(filename):
     return config
 
 
-def load_image_to_fixed_width(path: str, width: int=256):
-    im = cv2.imread(path)
-    ratio = width / im.shape[1]
-    resized_im = cv2.resize(im, (width, int(ratio * im.shape[0])))
-    return resized_im
+class MainProcess():
 
+    _ALL_STEPS = 5
+    _STEP_DICT = {
+        1: "input",
+        2: "extraction",
+        3: "reduction",
+        4: "clustering",
+        5: "output"
+    }
 
-def main(dest_dir: str):
-    configs = load_config('config.yaml')
+    def __init__(self):
+        self.configs = load_config('config.yaml')
+        self.data_dir = self.configs['global_settings']['data_dir']
+        self.result_dir = self.configs['global_settings']['result_dir']
+        self.extractor = None
+        self.step = 1
 
-    data_dir = configs['global_settings']['data_dir']
-    result_dir = configs['global_settings']['result_dir']
-    dst_path = os.path.join(result_dir, dest_dir)
-    if os.path.exists(dst_path):
-        shutil.rmtree(dst_path)
-    os.mkdir(dst_path)
+    def start(self):
+        """ Start the process. """ 
+        if self.step > MainProcess._ALL_STEPS: return
+        match MainProcess._STEP_DICT[self.step]:
+            case "input":
+                self.input_step()
+            case "extraction":
+                self.extraction_step()
+            case "reduction":
+                self.reduction_step()
+            case "clustering":
+                self.clustering_step()
+            case "output":
+                self.output_step()
+            case _:
+                raise AttributeError("Undefined step.") 
+        self.proceed()
+        self.start()
 
-    if not os.path.exists((src_path := os.path.join(data_dir, dest_dir))):
-        raise FileExistsError(f"Can't find {src_path}.")
+    def proceed(self):
+        print(f"\n{MainProcess._STEP_DICT[self.step].capitalize()} step completed. " + 
+               "What would you like to do next?")
+        response = pyip.inputMenu(
+            choices=['Next', 'Repeat', 'Back'],
+            prompt="Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:\n",
+            numbered=True
+        )
+        self.hline()
+        if response == "Next":
+            self.step += 1
+        elif response == "Back":
+            self.step = max(self.step-1, 1)
 
-    backbone = "resnet"
-    reduction_method = "UMAP"
-    cluster_method = "DBSCAN"
+    def hline(self):
+        print("==========================================================\n")
 
-    
-    extractor = FeatureExtrator(configs=configs['extractor'])
-    X, images = extractor.extract(path=src_path)
+    def input_step(self):
+        self.dirname = directory_prompt(data_dir=self.data_dir)
+        self.src_path = os.path.join(self.data_dir, self.dirname)
+        print(f"Input data path: {self.src_path}")
 
-    reducer = DimReducer().set_algo(reduction_method, configs['reduction'])
-    X_reduced = reducer.apply(X)
-    cluster_algo = ClusterAlgo().set_algo(method=cluster_method, configs=configs['clustering'])
-    labels = cluster_algo.apply(X_reduced)
-    
-    ##### TEMP
-    X_reduced = pd.DataFrame(X_reduced)
-    X_reduced.columns = ['x', 'y']
-    X_reduced['cluster'] = labels
+        self.dst_path = os.path.join(self.result_dir, self.dirname)
+        if os.path.exists(self.dst_path):
+            shutil.rmtree(self.dst_path)
+        os.mkdir(self.dst_path)
+        
+    def extraction_step(self):
+        self.backbone = extraction_prompt()
+        print(f"Selected backbone: {self.backbone}")
+        if self.extractor is None:
+            self.extractor = FeatureExtrator(
+                configs=self.configs['extractor'],
+                backbone=self.backbone)
+        else:
+            self.extractor.set_model(self.backbone)
+        self.X, self.image_names = self.extractor.extract(path=self.src_path)
 
-    df_mean = X_reduced.groupby('cluster').mean()
-    df_mean.columns = ['mean_x', 'mean_y']
+    def reduction_step(self):
+        self.reduction_method = reduction_prompt()
+        print(f"Selected dimensional reduction algorithm: {self.reduction_method}")
+        print("Start reducing dimensionality ...")
+        self.reducer = DimReducer().set_algo(
+            method=self.reduction_method, 
+            configs=self.configs['reduction'])
+        self.X_reduced = self.reducer.apply(self.X)
+        self.df = pd.DataFrame(self.X_reduced)
+        self.df.columns = ['x', 'y']
+        DrawResult.draw_reduction(self.df, self.reduction_method)
 
-    df_outlier = None
-    if cluster_method == 'DBSCAN' and -1 in df_mean.index:
-        df_outlier = X_reduced[X_reduced['cluster'] == -1]
-        df_filter = X_reduced[X_reduced['cluster'] != -1]
-        df_mean.drop(-1, inplace=True)
-    else:
-        df_filter = X_reduced.copy()
-    
-    df_merge = pd.merge(df_filter, df_mean, how='inner', on='cluster')
-    df_merge['dist_square'] = (df_merge['x'] - df_merge['mean_x'])**2 + \
-                              (df_merge['y'] - df_merge['mean_y'])**2
-    df_merge.index = df_filter.index
+    def clustering_step(self):
+        self.cluster_method = clustering_prompt()
+        print(f"Selected clustering algorithm: {self.cluster_method}")
+        print("Start clustering ...")
+        self.cluster_algo = ClusterAlgo().set_algo(
+            method=self.cluster_method, 
+            configs=self.configs['clustering'])
+        
+        self.df['cluster'] = self.cluster_algo.apply(self.X_reduced)
+        self.df_mean = self.df.groupby('cluster').mean()
+        self.df_mean.columns = ['mean_x', 'mean_y']
 
-    n_smallest = 5
-    n_smallest = int(min(df_merge.groupby('cluster')['x'].count().min(), n_smallest))
+        self.df_outlier = None
+        if self.cluster_method == 'DBSCAN' and -1 in self.df_mean.index:
+            self.df_outlier = self.df[self.df['cluster'] == -1]
+            self.df_filter = self.df[self.df['cluster'] != -1]
+            self.df_mean.drop(-1, inplace=True)
+        else:
+            self.df_filter = self.df.copy()
 
-    df_sorted = df_merge.reset_index().rename(columns={'index': 'original_index'})
-    df_sorted = df_sorted.sort_values(['cluster', 'dist_square'])
-    df_sorted = df_sorted.groupby('cluster').head(n_smallest)
-    df_sorted['rank'] = df_sorted.groupby('cluster').cumcount()
+        print("Clustering mean: ")
+        print(self.df_mean)
 
-    result = df_sorted.pivot(index='cluster', columns='rank', values='original_index')
-    r, c = len(result), n_smallest
-    fig_im = make_subplots(rows=r, cols=c)
+        DrawResult.draw_clustering(
+            self.df_filter, self.df_mean,
+            reduction_method=self.reduction_method,
+            cluster_method=self.cluster_method
+        )
 
-    for i in range(r):
-        for j in range(c):
-            index = result.loc[i][j]
-            if np.isnan(index):
-                im = np.empty((0,0))
-            else:
-                im_path = os.path.join(src_path, images[int(index)])
-                im = load_image_to_fixed_width(im_path)[..., ::-1]
-            fig_im.add_trace(
-                go.Image(z=im),
-                row=i+1, col=j+1
-            )
+    def output_step(self):
+        self.df_merge = pd.merge(self.df_filter, self.df_mean, how='inner', on='cluster')
+        self.df_merge['dist_square'] = (self.df_merge['x'] - self.df_merge['mean_x'])**2 + \
+                                       (self.df_merge['y'] - self.df_merge['mean_y'])**2
+        self.df_merge.index = self.df_filter.index
+        n_smallest = output_prompt(maximum=self.df_merge.groupby('cluster')['x'].count().min())
 
-    fig_im.update_layout(
-        width=n_smallest * 200, 
-        height=r*150 + 100,
-        template='plotly',
-        title={
-            'text': f"Top {n_smallest} Images Nearest to the Cluster's Mean",
-            'x': 0.5, 'xanchor': 'center',
-            'font': {'size': 20}
-        },
-    )
+        df_rank = self.df_merge.reset_index().rename(columns={'index': 'original_index'})
+        df_rank = df_rank.sort_values(['cluster', 'dist_square'])
+        df_rank = df_rank.groupby('cluster').head(n_smallest)
+        df_rank['rank'] = df_rank.groupby('cluster').cumcount()
+        df_rank = df_rank.pivot(index='cluster', columns='rank', values='original_index')
 
-    fig_im.update_xaxes(showticklabels=False)
-    fig_im.update_yaxes(showticklabels=False)
-    fig_im.write_image(os.path.join(dst_path, f'top_{n_smallest}_samples.png'))
+        DrawResult.draw_top_n_output(
+            df_rank, self.image_names, 
+            src_path=self.src_path, 
+            dst_path=self.dst_path
+        )
 
 
 if __name__ == "__main__":
-    dest_dir = '4DM24DK1B84_9CM112046N10_UniformLight'
-    main(dest_dir)
+    # main()
+    process = MainProcess()
+    process.start()
 

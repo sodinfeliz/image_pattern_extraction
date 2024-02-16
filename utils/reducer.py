@@ -18,7 +18,7 @@ class DimReducer():
             print("No algorithm configured.")
 
     def set_algo(self, method, configs):
-        valid_methods = {"TSNE": TSNE, "UMAP": UMAP}
+        valid_methods = {"t-SNE": TSNE, "UMAP": UMAP}
         assert method in valid_methods, f"Unknown reduction method: {method}."
         self.method = method
         self._algo = valid_methods[method](**configs[method])
@@ -36,7 +36,7 @@ class DimReducer():
             np.ndarray: (n_samples, out_features)
         """
         assert self._algo is not None, "Please set algorithm first."
-        if self.method == "TSNE":
+        if self.method == "t-SNE":
             X = PCA(n_components=min(len(X), init_dim)).fit_transform(X)
         X_reduced = self._algo.fit_transform(X)
         return X_reduced
