@@ -4,6 +4,7 @@ import shutil
 import pandas as pd
 import pyinputplus as pyip
 
+import src.utils as utils
 from src import ClusterAlgo, DimReducer, FeatureExtrator
 from src.draw import DrawResult
 from src.prompt import (directory_prompt, extraction_prompt, 
@@ -153,6 +154,7 @@ class MainProcess():
             src_path=self.src_path, 
             dst_path=self.dst_path
         )
+        utils.open_directory(self.dst_path)
 
 
 if __name__ == "__main__":
