@@ -3,6 +3,8 @@ import yaml
 import shutil
 import pandas as pd
 import pyinputplus as pyip
+import questionary
+from termcolor import colored
 
 import src.utils as utils
 from src import ClusterAlgo, DimReducer, FeatureExtrator
@@ -60,11 +62,11 @@ class MainProcess():
         else:
             print(f"\n{MainProcess._STEP_DICT[self.step].capitalize()} step completed. " + 
                    "What would you like to do next?")
-            response = pyip.inputMenu(
-                choices=['Next', 'Repeat', 'Back'],
-                prompt="Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:\n",
-                numbered=True
-            )
+            response = questionary.select(
+                "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
+                choices=['Next', 'Repeat', 'Back']
+            ).ask()
+
         self.hline()
         if response == "Next":
             self.step += 1
@@ -89,7 +91,6 @@ class MainProcess():
         
     def extraction_step(self):
         self.backbone = extraction_prompt()
-        print(f"Selected backbone: {self.backbone}")
         if self.extractor is None:
             self.extractor = FeatureExtrator(
                 configs=self.configs['extractor'],
@@ -100,25 +101,26 @@ class MainProcess():
 
     def reduction_step(self):
         self.reduction_method = reduction_prompt()
-        print(f"Selected dimensional reduction algorithm: {self.reduction_method}")
-        print("Start reducing dimensionality ...")
+        print("\nStart reducing dimensionality ... ", end="")
         self.reducer = DimReducer().set_algo(
             method=self.reduction_method, 
             configs=self.configs['reduction'])
         self.X_reduced = self.reducer.apply(self.X)
+        print(colored("completed", "green"))
+
         self.df = pd.DataFrame(self.X_reduced)
         self.df.columns = ['x', 'y']
         DrawResult.draw_reduction(self.df, self.reduction_method)
 
     def clustering_step(self):
         self.cluster_method = clustering_prompt()
-        print(f"Selected clustering algorithm: {self.cluster_method}")
-        print("Start clustering ...")
+        print("\nStart clustering ... ", end="")
         self.cluster_algo = ClusterAlgo().set_algo(
             method=self.cluster_method, 
             configs=self.configs['clustering'])
-        
         self.df['cluster'] = self.cluster_algo.apply(self.X_reduced)
+        print(colored("completed", "green"))
+
         self.df_mean = self.df.groupby('cluster').mean()
         self.df_mean.columns = ['mean_x', 'mean_y']
 
