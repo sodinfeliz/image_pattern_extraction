@@ -74,7 +74,7 @@ class MainProcess():
             self.step = max(self.step-1, 1)
 
     def hline(self):
-        print("\n==========================================================\n")
+        print("\n============================================================================================\n")
 
     def input_step(self):
         if len(utils.list_all_directories(self.data_dir)) == 0:
