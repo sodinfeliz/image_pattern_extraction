@@ -1,6 +1,8 @@
 import os
 import pyinputplus as pyip
 
+from src.utils import list_all_directories
+
 
 def directory_prompt(data_dir: str):
     def validate(dirname: str):    
@@ -12,8 +14,7 @@ def directory_prompt(data_dir: str):
         prompt="Enter directory name, or type 'list' to see available directories: ")
     
     if dirname == 'list':
-        l = os.listdir("./data")
-        l.remove(".gitkeep")
+        l = list_all_directories("./data")
         dirname = pyip.inputMenu(l, numbered=True)
 
     return dirname

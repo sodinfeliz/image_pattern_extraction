@@ -75,6 +75,9 @@ class MainProcess():
         print("\n==========================================================\n")
 
     def input_step(self):
+        if len(utils.list_all_directories(self.data_dir)) == 0:
+            raise Exception("There's no available image data.")
+        
         self.dirname = directory_prompt(data_dir=self.data_dir)
         self.src_path = os.path.join(self.data_dir, self.dirname)
         print(f"Input data path: {self.src_path}")
