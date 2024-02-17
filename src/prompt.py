@@ -1,23 +1,10 @@
-import os
 import questionary
-import pyinputplus as pyip
 
 from src.utils import list_all_directories
 
 
 def directory_prompt(data_dir: str):
-    # def validate(dirname: str):    
-    #     if dirname != 'list' and not os.path.exists(os.path.join(data_dir, dirname)):
-    #         raise Exception("Directory doesn't exist.")
-
-    # dirname = pyip.inputCustom(
-    #     customValidationFunc=validate,
-    #     prompt="Enter directory name, or type 'list' to see available directories: ")
-    
-    # if dirname == 'list':
-    #     l = list_all_directories("./data")
-    #     dirname = pyip.inputMenu(l, numbered=True)
-
+    # TODO Let user directly input the dir name
     dirname = questionary.select(
         "Select one of the directory name:",
         choices=list_all_directories(data_dir)

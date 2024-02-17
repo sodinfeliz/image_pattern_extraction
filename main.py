@@ -2,7 +2,6 @@ import os
 import yaml
 import shutil
 import pandas as pd
-import pyinputplus as pyip
 import questionary
 from termcolor import colored
 
@@ -21,14 +20,14 @@ def load_config(filename):
 
 class MainProcess():
 
-    _ALL_STEPS = 5
-    _STEP_DICT = {
+    _STEP_DESC = {
         1: "input",
         2: "extraction",
         3: "reduction",
         4: "clustering",
         5: "output"
     }
+    _ALL_STEPS = len(_STEP_DESC)
 
     def __init__(self):
         self.configs = load_config('config.yaml')
@@ -40,7 +39,7 @@ class MainProcess():
     def start(self):
         """ Start the process. """ 
         if self.step > MainProcess._ALL_STEPS: return
-        match MainProcess._STEP_DICT[self.step]:
+        match MainProcess._STEP_DESC[self.step]:
             case "input":
                 self.input_step()
             case "extraction":
@@ -57,10 +56,10 @@ class MainProcess():
         self.start()
 
     def proceed(self):
-        if MainProcess._STEP_DICT[self.step] in ["extraction", "output"]:
+        if MainProcess._STEP_DESC[self.step] in ["extraction", "output"]:
             response = "Next"
         else:
-            print(f"\n{MainProcess._STEP_DICT[self.step].capitalize()} step completed. " + 
+            print(f"\n{MainProcess._STEP_DESC[self.step].capitalize()} step completed. " + 
                    "What would you like to do next?")
             response = questionary.select(
                 "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
