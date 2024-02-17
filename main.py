@@ -8,8 +8,8 @@ from termcolor import colored
 from src.utils import open_directory, list_all_directories
 from src import ClusterAlgo, DimReducer, FeatureExtrator
 from src.draw import DrawResult
-from src.prompt import (directory_prompt, extraction_prompt, 
-                        reduction_prompt, clustering_prompt, output_prompt)
+from src.prompt import (directory_prompt, extraction_prompt, reduction_prompt, 
+                        clustering_prompt, output_prompt, select_prompt)
 
 
 def load_config(filename):
@@ -75,10 +75,10 @@ class MainProcess():
         """ Prompts the user for the next action after a step is completed. """
         print(f"\n{colored(step_desc.capitalize(), 'light_blue')} step completed. " + 
                "What would you like to do next?")
-        return questionary.select(
+        return select_prompt(
             "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
             choices=['Next', 'Repeat', 'Back']
-        ).ask()
+        )
 
     def hline(self, count=92):
         """ Prints a horizontal line. """
