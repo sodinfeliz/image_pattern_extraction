@@ -4,10 +4,10 @@ global_settings:
 
 extractor:
   backbone:
-    resnet:
+    ResNet:
       input: 256
       output: 2048
-    efficientnet:
+    EfficientNet:
       input: 256
       output: 1000
   dataset:

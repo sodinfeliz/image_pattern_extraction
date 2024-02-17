@@ -98,7 +98,7 @@ class MainProcess():
         os.mkdir(self.dst_path)
         
     def extraction_step(self):
-        self.backbone = extraction_prompt()
+        self.backbone = extraction_prompt(FeatureExtrator.AVAILABLE_MODELS)
         if self.extractor is None:
             self.extractor = FeatureExtrator(
                 configs=self.configs['extractor'],

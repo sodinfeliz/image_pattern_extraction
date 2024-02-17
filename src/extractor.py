@@ -8,6 +8,12 @@ from .dataset import CustomImageDataset
 
 
 class FeatureExtrator():
+
+    AVAILABLE_MODELS = [
+        "ResNet",
+        "EfficientNet"
+    ]
+
     def __init__(self, configs: dict, backbone: str='') -> None:
         self.configs = configs
         self.model = None
@@ -17,11 +23,12 @@ class FeatureExtrator():
     def set_model(self, backbone: str):
         """ 
         Set the backbone for the model,
-        only "efficientnet", and "resnet" available.
+        only "EfficientNet", and "ResNet" available.
 
         Args:
             backbone (str): backbone of model
         """
+        assert backbone in self.AVAILABLE_MODELS, f"Invalid Backbone {backbone}."
         if not backbone:
             self.model = Model()
         else:

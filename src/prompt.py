@@ -13,12 +13,12 @@ def directory_prompt(data_dir: str):
     return dirname
 
 
-def extraction_prompt():
+def extraction_prompt(backbone_choices: list[str]):
     backbone = questionary.select(
         "Select the backbone of the extraction model:",
-        choices=["ResNet", "EfficientNet"]
+        choices=backbone_choices
     ).ask()
-    return backbone.lower()
+    return backbone
 
 
 def reduction_prompt():
