@@ -56,10 +56,12 @@ class MainProcess():
         self.start()
 
     def proceed(self):
-        if MainProcess._STEP_DESC[self.step] in ["extraction", "output"]:
+        step_desc = MainProcess._STEP_DESC[self.step]
+
+        if step_desc in ["extraction", "output"]:
             response = "Next"
         else:
-            print(f"\n{MainProcess._STEP_DESC[self.step].capitalize()} step completed. " + 
+            print(f"\n{colored(step_desc.capitalize(), 'light_blue')} step completed. " + 
                    "What would you like to do next?")
             response = questionary.select(
                 "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
@@ -72,8 +74,8 @@ class MainProcess():
         elif response == "Back":
             self.step = max(self.step-1, 1)
 
-    def hline(self):
-        print("\n============================================================================================\n")
+    def hline(self, count=92):
+        print("\n" + '='*count + "\n")
 
     def input_step(self):
         if len(utils.list_all_directories(self.data_dir)) == 0:
