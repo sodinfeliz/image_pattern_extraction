@@ -5,7 +5,7 @@ import pandas as pd
 import questionary
 from termcolor import colored
 
-import src.utils as utils
+from src.utils import open_directory, list_all_directories
 from src import ClusterAlgo, DimReducer, FeatureExtrator
 from src.draw import DrawResult
 from src.prompt import (directory_prompt, extraction_prompt, 
@@ -27,46 +27,43 @@ class MainProcess():
         4: "clustering",
         5: "output"
     }
-    _ALL_STEPS = len(_STEP_DESC)
 
     def __init__(self):
-        self.configs = load_config('config.yaml')
-        self.data_dir = self.configs['global_settings']['data_dir']
-        self.result_dir = self.configs['global_settings']['result_dir']
+        self.load_configs()
+        self.step_methods = {
+            "input": self.input_step,
+            "extraction": self.extraction_step,
+            "reduction": self.reduction_step,
+            "clustering": self.clustering_step,
+            "output": self.output_step
+        }
         self.extractor = None
         self.step = 1
 
+    def load_configs(self):
+        self.configs = load_config('config.yaml')
+        self.data_dir = self.configs['global_settings']['data_dir']
+        self.result_dir = self.configs['global_settings']['result_dir']
+
     def start(self):
-        """ Start the process. """ 
-        if self.step > MainProcess._ALL_STEPS: return
-        match MainProcess._STEP_DESC[self.step]:
-            case "input":
-                self.input_step()
-            case "extraction":
-                self.extraction_step()
-            case "reduction":
-                self.reduction_step()
-            case "clustering":
-                self.clustering_step()
-            case "output":
-                self.output_step()
-            case _:
+        """ Start the main process loop. """ 
+        while self.step <= len(self._STEP_DESC):
+            step_desc = self._STEP_DESC[self.step]
+            method = self.step_methods.get(step_desc)
+            if method:
+                method()
+                self.proceed()
+            else:
                 raise AttributeError("Undefined step.") 
-        self.proceed()
-        self.start()
 
     def proceed(self):
-        step_desc = MainProcess._STEP_DESC[self.step]
+        """ Handles the navigation between steps. """
+        step_desc = self._STEP_DESC[self.step]
 
         if step_desc in ["extraction", "output"]:
             response = "Next"
         else:
-            print(f"\n{colored(step_desc.capitalize(), 'light_blue')} step completed. " + 
-                   "What would you like to do next?")
-            response = questionary.select(
-                "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
-                choices=['Next', 'Repeat', 'Back']
-            ).ask()
+            response = self.prompt_next_action(step_desc)
 
         self.hline()
         if response == "Next":
@@ -74,11 +71,21 @@ class MainProcess():
         elif response == "Back":
             self.step = max(self.step-1, 1)
 
+    def prompt_next_action(self, step_desc):
+        """ Prompts the user for the next action after a step is completed. """
+        print(f"\n{colored(step_desc.capitalize(), 'light_blue')} step completed. " + 
+               "What would you like to do next?")
+        return questionary.select(
+            "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
+            choices=['Next', 'Repeat', 'Back']
+        ).ask()
+
     def hline(self, count=92):
+        """ Prints a horizontal line. """
         print("\n" + '='*count + "\n")
 
     def input_step(self):
-        if len(utils.list_all_directories(self.data_dir)) == 0:
+        if len(list_all_directories(self.data_dir)) == 0:
             raise Exception("There's no available image data.")
         
         self.dirname = directory_prompt(data_dir=self.data_dir)
@@ -160,7 +167,7 @@ class MainProcess():
             src_path=self.src_path, 
             dst_path=self.dst_path
         )
-        utils.open_directory(self.dst_path)
+        open_directory(self.dst_path)
 
 
 if __name__ == "__main__":
