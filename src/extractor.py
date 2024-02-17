@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
-from tqdm import tqdm
+from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, TaskID
 
 from .model import Model
 from .dataset import CustomImageDataset
@@ -55,11 +55,24 @@ class FeatureExtrator():
             shuffle=False
         )
         features = np.empty((0, self.configs['backbone'][self.model.backbone]['output']))
+
         with torch.no_grad():
-            for batch in tqdm(dataloader, desc='Extracting features: '):
-                images = batch.to(self.configs['device'])
-                out = self.model.predict(images)
-                features = np.concatenate((features, out))
+            with Progress(
+                TextColumn("[bold blue]{task.description}", justify="right"),
+                BarColumn(bar_width=None, style="green"),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeRemainingColumn(),
+                expand=True
+            ) as progress:
+                task_id: TaskID = progress.add_task("[cyan]Extracting features: ", total=len(dataloader))
+
+                for batch in dataloader:
+                    # Update the progress for each batch processed
+                    progress.update(task_id, advance=1)
+
+                    images = batch.to(self.configs['device'])
+                    out = self.model.predict(images)
+                    features = np.concatenate((features, out))
 
         if self.configs['device'] == 'cuda':
             torch.cuda.empty_cache()

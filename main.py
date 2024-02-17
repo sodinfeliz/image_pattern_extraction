@@ -2,7 +2,8 @@ import os
 import yaml
 import shutil
 import pandas as pd
-import pyinputplus as pyip
+import questionary
+from termcolor import colored
 
 import src.utils as utils
 from src import ClusterAlgo, DimReducer, FeatureExtrator
@@ -19,14 +20,14 @@ def load_config(filename):
 
 class MainProcess():
 
-    _ALL_STEPS = 5
-    _STEP_DICT = {
+    _STEP_DESC = {
         1: "input",
         2: "extraction",
         3: "reduction",
         4: "clustering",
         5: "output"
     }
+    _ALL_STEPS = len(_STEP_DESC)
 
     def __init__(self):
         self.configs = load_config('config.yaml')
@@ -38,7 +39,7 @@ class MainProcess():
     def start(self):
         """ Start the process. """ 
         if self.step > MainProcess._ALL_STEPS: return
-        match MainProcess._STEP_DICT[self.step]:
+        match MainProcess._STEP_DESC[self.step]:
             case "input":
                 self.input_step()
             case "extraction":
@@ -55,24 +56,26 @@ class MainProcess():
         self.start()
 
     def proceed(self):
-        if MainProcess._STEP_DICT[self.step] in ["extraction", "output"]:
+        step_desc = MainProcess._STEP_DESC[self.step]
+
+        if step_desc in ["extraction", "output"]:
             response = "Next"
         else:
-            print(f"\n{MainProcess._STEP_DICT[self.step].capitalize()} step completed. " + 
+            print(f"\n{colored(step_desc.capitalize(), 'light_blue')} step completed. " + 
                    "What would you like to do next?")
-            response = pyip.inputMenu(
-                choices=['Next', 'Repeat', 'Back'],
-                prompt="Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:\n",
-                numbered=True
-            )
+            response = questionary.select(
+                "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
+                choices=['Next', 'Repeat', 'Back']
+            ).ask()
+
         self.hline()
         if response == "Next":
             self.step += 1
         elif response == "Back":
             self.step = max(self.step-1, 1)
 
-    def hline(self):
-        print("\n==========================================================\n")
+    def hline(self, count=92):
+        print("\n" + '='*count + "\n")
 
     def input_step(self):
         if len(utils.list_all_directories(self.data_dir)) == 0:
@@ -89,7 +92,6 @@ class MainProcess():
         
     def extraction_step(self):
         self.backbone = extraction_prompt()
-        print(f"Selected backbone: {self.backbone}")
         if self.extractor is None:
             self.extractor = FeatureExtrator(
                 configs=self.configs['extractor'],
@@ -100,25 +102,26 @@ class MainProcess():
 
     def reduction_step(self):
         self.reduction_method = reduction_prompt()
-        print(f"Selected dimensional reduction algorithm: {self.reduction_method}")
-        print("Start reducing dimensionality ...")
+        print("\nStart reducing dimensionality ... ", end="")
         self.reducer = DimReducer().set_algo(
             method=self.reduction_method, 
             configs=self.configs['reduction'])
         self.X_reduced = self.reducer.apply(self.X)
+        print(colored("completed", "green"))
+
         self.df = pd.DataFrame(self.X_reduced)
         self.df.columns = ['x', 'y']
         DrawResult.draw_reduction(self.df, self.reduction_method)
 
     def clustering_step(self):
         self.cluster_method = clustering_prompt()
-        print(f"Selected clustering algorithm: {self.cluster_method}")
-        print("Start clustering ...")
+        print("\nStart clustering ... ", end="")
         self.cluster_algo = ClusterAlgo().set_algo(
             method=self.cluster_method, 
             configs=self.configs['clustering'])
-        
         self.df['cluster'] = self.cluster_algo.apply(self.X_reduced)
+        print(colored("completed", "green"))
+
         self.df_mean = self.df.groupby('cluster').mean()
         self.df_mean.columns = ['mean_x', 'mean_y']
 
