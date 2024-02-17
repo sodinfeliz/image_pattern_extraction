@@ -2,14 +2,26 @@ import os
 import yaml
 import shutil
 import pandas as pd
-import questionary
 from termcolor import colored
 
-from src.utils import open_directory, list_all_directories
-from src import ClusterAlgo, DimReducer, FeatureExtrator
+from src.utils import (
+    open_directory,
+    list_all_directories
+)
+from src import (
+    ClusterAlgo,
+    DimReducer,
+    FeatureExtrator,
+)
 from src.draw import DrawResult
-from src.prompt import (directory_prompt, extraction_prompt, reduction_prompt, 
-                        clustering_prompt, output_prompt, select_prompt)
+from src.prompt import (
+    directory_prompt,
+    extraction_prompt,
+    reduction_prompt,
+    clustering_prompt,
+    output_prompt,
+    select_prompt,
+)
 
 
 def load_config(filename):
@@ -108,7 +120,7 @@ class MainProcess():
         self.X, self.image_names = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):
-        self.reduction_method = reduction_prompt()
+        self.reduction_method = reduction_prompt(DimReducer.AVAILABLE_REDUCER)
         print("\nStart reducing dimensionality ... ", end="")
         self.reducer = DimReducer().set_algo(
             method=self.reduction_method, 

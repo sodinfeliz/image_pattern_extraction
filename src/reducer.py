@@ -6,9 +6,19 @@ from umap import UMAP
 
 
 class DimReducer():
+
+    AVAILABLE_REDUCER = [
+        "t-SNE",
+        "UMAP"
+    ]
+
     def __init__(self) -> None:
         self.method = None
         self._algo = None
+        self.reduction_methods = {
+            "t-SNE": TSNE,
+            "UMAP": UMAP
+        }
         self.configs = dict()
 
     def display_configs(self):
@@ -18,10 +28,9 @@ class DimReducer():
             print("No algorithm configured.")
 
     def set_algo(self, method, configs):
-        valid_methods = {"t-SNE": TSNE, "UMAP": UMAP}
-        assert method in valid_methods, f"Unknown reduction method: {method}."
+        assert method in self.AVAILABLE_REDUCER, f"Unknown reduction method: {method}."
         self.method = method
-        self._algo = valid_methods[method](**configs[method])
+        self._algo = self.reduction_methods[method](**configs[method])
         return self
     
     def apply(self, X: np.ndarray, init_dim: int=100) -> np.ndarray:

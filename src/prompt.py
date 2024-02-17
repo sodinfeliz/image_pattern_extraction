@@ -26,10 +26,10 @@ def extraction_prompt(backbone_choices: list[str]):
     )
 
 
-def reduction_prompt():
+def reduction_prompt(reduction_choices: list[str]):
     return select_prompt(
         "Select the dimensionality reduction algorithm:",
-        choices=["t-SNE", "UMAP"]
+        choices=reduction_choices
     )
 
 
