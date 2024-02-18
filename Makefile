@@ -4,6 +4,7 @@ PIP := $(VENV)/bin/pip
 
 $(VENV)/bin/activate: requirements.txt
 	python3 -m venv $(VENV)
+	$(PYTHON) -m pip install --upgrade pip
 	$(PIP) install -r requirements.txt torch torchvision torchaudio
 
 build: $(VENV)/bin/activate
