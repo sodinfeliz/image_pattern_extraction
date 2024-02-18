@@ -61,20 +61,16 @@ class FeatureExtractor:
         )
         features = np.empty((0, self.configs['backbone'][self.model.backbone]['output']))
 
-        with torch.no_grad():
-            with Progress(
-                TextColumn("[bold blue]{task.description}", justify="right"),
-                BarColumn(bar_width=None, style="green"),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-                TimeRemainingColumn(),
-                expand=True
-            ) as progress:
-                task_id: TaskID = progress.add_task("[cyan]Extracting features: ", total=len(dataloader))
+        with (
+            torch.no_grad(), 
+            Progress() as progress
+        ):
+            task_id: TaskID = progress.add_task("[cyan]Extracting features: ", total=len(dataloader))
 
-                for batch in dataloader:
-                    images = batch.to(self.model.get_device())
-                    out = self.model.predict(images)
-                    features = np.concatenate((features, out))
-                    progress.update(task_id, advance=1)
+            for batch in dataloader:
+                images = batch.to(self.model.get_device())
+                out = self.model.predict(images)
+                features = np.concatenate((features, out))
+                progress.update(task_id, advance=1)
 
         return features, dataset.get_all_imgs()
