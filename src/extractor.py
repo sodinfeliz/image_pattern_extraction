@@ -7,7 +7,7 @@ from .model import Model
 from .dataset import CustomImageDataset
 
 
-class FeatureExtrator():
+class FeatureExtractor:
 
     AVAILABLE_MODELS = [
         "ResNet",

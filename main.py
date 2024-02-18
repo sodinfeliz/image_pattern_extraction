@@ -11,7 +11,7 @@ from src.utils import (
 from src import (
     ClusterAlgo,
     DimReducer,
-    FeatureExtrator,
+    FeatureExtractor,
 )
 from src.draw import DrawResult
 from src.prompt import (
@@ -110,9 +110,9 @@ class MainProcess():
         os.mkdir(self.dst_path)
         
     def extraction_step(self):
-        self.backbone = extraction_prompt(FeatureExtrator.AVAILABLE_MODELS)
+        self.backbone = extraction_prompt(FeatureExtractor.AVAILABLE_MODELS)
         if self.extractor is None:
-            self.extractor = FeatureExtrator(
+            self.extractor = FeatureExtractor(
                 configs=self.configs['extractor'],
                 backbone=self.backbone)
         else:
