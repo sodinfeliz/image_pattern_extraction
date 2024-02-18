@@ -74,12 +74,10 @@ class FeatureExtrator():
                 task_id: TaskID = progress.add_task("[cyan]Extracting features: ", total=len(dataloader))
 
                 for batch in dataloader:
-                    # Update the progress for each batch processed
-                    progress.update(task_id, advance=1)
-
                     images = batch.to(self.model.get_device())
                     out = self.model.predict(images)
                     features = np.concatenate((features, out))
+                    progress.update(task_id, advance=1)
 
         if self.model.get_device() == 'cuda':
             torch.cuda.empty_cache()
