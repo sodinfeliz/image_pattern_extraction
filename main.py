@@ -2,7 +2,7 @@ import os
 import yaml
 import shutil
 import pandas as pd
-from termcolor import colored
+from rich import print
 
 from src.utils import (
     open_directory,
@@ -85,8 +85,8 @@ class MainProcess():
 
     def prompt_next_action(self, step_desc):
         """ Prompts the user for the next action after a step is completed. """
-        print(f"\n{colored(step_desc.capitalize(), 'light_blue')} step completed. " + 
-               "What would you like to do next?")
+        print(f"\n[bold dodger_blue1]{step_desc.capitalize()}[/bold dodger_blue1] step completed. ", end="")
+        print("What would you like to do next?")
         return select_prompt(
             "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
             choices=['Next', 'Repeat', 'Back']
@@ -126,7 +126,7 @@ class MainProcess():
             method=self.reduction_method, 
             configs=self.configs['reduction'])
         self.X_reduced = self.reducer.apply(self.X)
-        print(colored("completed", "green"))
+        print("[bold chartreuse3]completed[/bold chartreuse3]")
 
         self.df = pd.DataFrame(self.X_reduced)
         self.df.columns = ['x', 'y']
@@ -139,7 +139,7 @@ class MainProcess():
             method=self.cluster_method, 
             configs=self.configs['clustering'])
         self.df['cluster'] = self.cluster_algo.apply(self.X_reduced)
-        print(colored("completed", "green"))
+        print("[bold chartreuse3]completed[/bold chartreuse3]")
 
         self.df_mean = self.df.groupby('cluster').mean()
         self.df_mean.columns = ['mean_x', 'mean_y']

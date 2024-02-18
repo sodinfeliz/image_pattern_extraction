@@ -9,4 +9,3 @@ opencv-python
 umap-learn
 questionary
 rich
-termcolor
