@@ -51,4 +51,4 @@ class Model():
         self._model.eval()
 
     def predict(self, X):
-        return self._model.forward(X).detach().cpu().numpy()
+        return self._model(X).detach().cpu().numpy()

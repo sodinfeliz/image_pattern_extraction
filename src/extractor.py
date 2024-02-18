@@ -28,7 +28,7 @@ class FeatureExtractor:
             backbone (str): backbone of model
         """
         if backbone in self.AVAILABLE_MODELS:
-            self.model = Model(backbone) if backbone else Model
+            self.model = Model(backbone) if backbone else Model()
             self.model.start_eval()
         else:
             raise ValueError(f"Invalid Backbone {backbone}.")
