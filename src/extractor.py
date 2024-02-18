@@ -33,7 +33,7 @@ class FeatureExtrator():
             self.model = Model()
         else:
             self.model = Model(backbone)
-        self.model.start_eval(device=self.configs['device'])
+        self.model.start_eval()
 
     def _set_dataset(self, path) -> CustomImageDataset:
         dataset = CustomImageDataset(
@@ -77,11 +77,11 @@ class FeatureExtrator():
                     # Update the progress for each batch processed
                     progress.update(task_id, advance=1)
 
-                    images = batch.to(self.configs['device'])
+                    images = batch.to(self.model.get_device())
                     out = self.model.predict(images)
                     features = np.concatenate((features, out))
 
-        if self.configs['device'] == 'cuda':
+        if self.model.get_device() == 'cuda':
             torch.cuda.empty_cache()
 
         return features, dataset.get_all_imgs()
