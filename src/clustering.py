@@ -13,33 +13,8 @@ class ClusterAlgo(GeneralAlgo):
     }
 
     def __init__(self) -> None:
-        self._method = None
-        self._algo = None
+        super().__init__()
         self.labels = None
-
-    @property
-    def method(self):
-        return self._method
-    
-    @method.setter
-    def method(self, _):
-        raise AttributeError("Directly modification of method disabled.")
-
-    def set_algo(self, method: str, configs):
-        if method not in self._AVAILABLE_ALGO:
-            raise ValueError(f"Unknown clustering algorithm: {method}.")
-        self._method = method
-        self._algo = self._AVAILABLE_ALGO[method](**configs[method])
-        return self
-    
-    def display_configs(self):
-        """
-        Display the current configuration settings of the algorithm
-        """
-        if self._algo:
-            print(json.dumps(self._algo.get_params(), indent=4))
-        else:
-            print("No algorithm configured.")
 
     def apply(self, X_reduced) -> np.ndarray:
         """ 

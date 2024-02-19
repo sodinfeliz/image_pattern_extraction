@@ -1,3 +1,5 @@
+import json
+
 from .prompt import (
     text_prompt,
     autocomplete_prompt,
@@ -9,6 +11,39 @@ from .prompt import (
 class GeneralAlgo:
 
     _AVAILABLE_ALGO = {}
+    _ALGO_NAME = ''
+
+    def __init__(self) -> None:
+        self._algo = None
+
+    @property
+    def method(self):
+        if self._algo:
+            return self._algo.__class__.__name__
+        return None
+    
+    def set_algo(self, method: str, configs: dict):
+        if method not in self._AVAILABLE_ALGO:
+            raise ValueError(f"Unknown {self._ALGO_NAME} method: '{method}'. " +
+                             f"Available methods are: {list(self._AVAILABLE_ALGO.keys())}.")
+        algo_calss = self._AVAILABLE_ALGO[method]
+        self._algo = algo_calss(**configs.get(method, {}))
+        return self
+
+    def display_configs(self):
+        """
+        Display the current configuration settings of the algorithm
+        """
+        if self._algo:
+            print(json.dumps(self._algo.get_params(), indent=4))
+        else:
+            print("No algorithm configured.")
+
+    def update_algo_config(self, configs: dict):
+        if not self._algo:
+            raise RuntimeError("Algorithm not set. Call 'set_algo' first.")
+        self._algo.set_params(**configs)
+        return self
 
     @classmethod
     def prompt(cls, message: str, configs: dict):
