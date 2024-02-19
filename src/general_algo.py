@@ -26,8 +26,8 @@ class GeneralAlgo:
         if method not in self._AVAILABLE_ALGO:
             raise ValueError(f"Unknown {self._ALGO_NAME} method: '{method}'. " +
                              f"Available methods are: {list(self._AVAILABLE_ALGO.keys())}.")
-        algo_calss = self._AVAILABLE_ALGO[method]
-        self._algo = algo_calss(**configs.get(method, {}))
+        algo_class = self._AVAILABLE_ALGO[method]
+        self._algo = algo_class(**configs.get(method, {}))
         return self
 
     def display_configs(self):
@@ -58,13 +58,13 @@ class GeneralAlgo:
             while not finished:
                 selected_param = autocomplete_prompt("Select the parameter:", choices=algo_configs.keys())
                 cur_val = algo_configs[selected_param]
-                vtype = type(cur_val)
+                value_type = type(cur_val)
 
                 while True:
-                    user_input = text_prompt(f"Set '{selected_param}' [{vtype.__name__}: {cur_val}]:")
+                    user_input = text_prompt(f"Set '{selected_param}' [{value_type.__name__}: {cur_val}]:")
                     try:
                         if user_input and user_input.lower() != "none":
-                            algo_configs[selected_param] = vtype(user_input)
+                            algo_configs[selected_param] = value_type(user_input)
                         # Validate by setting params
                         algo_instance.set_params(**algo_configs)
                         break # Exit the loop if successfully updated and validated

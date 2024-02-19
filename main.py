@@ -6,16 +6,16 @@ import pandas as pd
 import argparse
 from rich import print
 
-from src.utils import (
-    open_directory,
-    list_all_directories
-)
 from src import (
     ClusterAlgo,
     ReduceAlgo,
     FeatureExtractor,
+    DrawResult
 )
-from src.draw import DrawResult
+from src.utils import (
+    open_directory,
+    list_all_directories
+)
 from src.prompt import (
     input_prompt,
     output_prompt,
@@ -99,7 +99,7 @@ class MainProcess:
             choices=['Next', 'Repeat', 'Back', 'Exit']
         )
 
-    def hline(self, symbol='=', count=94):
+    def hline(self, symbol: str='=', count: int=80):
         """ Prints a horizontal line. """
         print("\n" + symbol*count + "\n")
 
