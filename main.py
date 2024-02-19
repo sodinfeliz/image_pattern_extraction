@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 import shutil
 import pandas as pd
@@ -79,19 +80,23 @@ class MainProcess:
         else:
             response = self.prompt_next_action(step_desc)
 
-        self.hline()
         if response == "Next":
             self.step += 1
         elif response == "Back":
             self.step = max(self.step-1, 1)
+        elif response == "Exit":
+            print("\nExit the program.\n")
+            sys.exit(0)
 
-    def prompt_next_action(self, step_desc):
+        self.hline()
+
+    def prompt_next_action(self, step_desc: str):
         """ Prompts the user for the next action after a step is completed. """
         print(f"\n[bold dodger_blue1]{step_desc.capitalize()}[/bold dodger_blue1] step completed. ", end="")
         print("What would you like to do next?")
         return select_prompt(
-            "Select 'Next' to proceed, 'Repeat' to redo, or 'Back' to return to the previous step:",
-            choices=['Next', 'Repeat', 'Back']
+            "Select the next action:",
+            choices=['Next', 'Repeat', 'Back', 'Exit']
         )
 
     def hline(self, symbol='=', count=94):
@@ -186,6 +191,7 @@ class MainProcess:
             dst_path=self.dst_path
         )
 
+        # override user configuration file
         with open(self.config_path, 'w') as file:
             yaml.safe_dump(self.configs, file, sort_keys=False)
 
