@@ -14,7 +14,7 @@ run: build
 
 clean:
 	rm -rf $(VENV)
-	find . -type f -name '*.pyc' -delete
+	find . -type d -name '__pycache__' -exec rm -rf {} +
 
 .DEFAULT_GOAL := build
 .PHONY: all build run clean
