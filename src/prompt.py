@@ -12,11 +12,11 @@ def select_prompt(message: str, choices: list):
 
 
 def directory_prompt(data_dir: str):
-    # TODO Let user directly input the dir name
-    return select_prompt(
-        "Select one of the directory name:",
-        choices=list_all_directories(data_dir)
-    )
+    return questionary.path(
+        "Input directory:",
+        get_paths=lambda: [data_dir],
+        only_directories=True
+    ).ask()
 
 
 def extraction_prompt(backbone_choices: list[str]):
