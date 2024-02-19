@@ -2,11 +2,23 @@ import json
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
 
+from .prompt import select_prompt
+
 
 class ClusterAlgo():
+
+    _AVAILABLE_ALGO = [
+        "K-Means",
+        "DBSCAN"
+    ]
+
     def __init__(self) -> None:
         self._method = None
         self._algo = None
+        self._valid_methods = {
+            "K-Means": KMeans,
+            "DBSCAN": DBSCAN
+        }
         self.labels = None
 
     @property
@@ -18,11 +30,9 @@ class ClusterAlgo():
         raise AttributeError("Directly modification of method disabled.")
 
     def set_algo(self, method: str, configs):
-        valid_methods = {"K-Means": KMeans, "DBSCAN": DBSCAN}
-        assert method in valid_methods, f"Unknown clustering algorithm: {method}."
+        assert method in self._AVAILABLE_ALGO, f"Unknown clustering algorithm: {method}."
         self._method = method
-        self._algo = valid_methods[method](**configs[method])
-
+        self._algo = self._valid_methods[method](**configs[method])
         return self
     
     def display_configs(self):
@@ -48,3 +58,10 @@ class ClusterAlgo():
         self._algo.fit(X_reduced)
         self.labels = self._algo.labels_
         return self.labels
+    
+    @classmethod
+    def prompt(cls):
+        return select_prompt(
+            "Select the clustering algorithm:",
+            choices=cls._AVAILABLE_ALGO
+        )

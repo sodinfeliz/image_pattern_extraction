@@ -4,10 +4,12 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
 
+from .prompt import select_prompt
+
 
 class DimReducer():
 
-    AVAILABLE_REDUCER = [
+    _AVAILABLE_ALGO = [
         "t-SNE",
         "UMAP"
     ]
@@ -28,7 +30,7 @@ class DimReducer():
             print("No algorithm configured.")
 
     def set_algo(self, method, configs):
-        assert method in self.AVAILABLE_REDUCER, f"Unknown reduction method: {method}."
+        assert method in self._AVAILABLE_ALGO, f"Unknown reduction method: {method}."
         self.method = method
         self._algo = self.reduction_methods[method](**configs[method])
         return self
@@ -49,3 +51,10 @@ class DimReducer():
             X = PCA(n_components=min(len(X), init_dim)).fit_transform(X)
         X_reduced = self._algo.fit_transform(X)
         return X_reduced
+    
+    @classmethod
+    def prompt(cls):
+        return select_prompt(
+            "Select the dimensionality reduction algorithm:",
+            choices=cls._AVAILABLE_ALGO
+        )

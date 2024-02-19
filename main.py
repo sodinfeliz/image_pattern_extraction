@@ -16,9 +16,6 @@ from src import (
 from src.draw import DrawResult
 from src.prompt import (
     directory_prompt,
-    extraction_prompt,
-    reduction_prompt,
-    clustering_prompt,
     output_prompt,
     select_prompt,
 )
@@ -110,7 +107,7 @@ class MainProcess():
         os.mkdir(self.dst_path)
         
     def extraction_step(self):
-        self.backbone = extraction_prompt(FeatureExtractor.AVAILABLE_MODELS)
+        self.backbone = FeatureExtractor.prompt()
         if self.extractor is None:
             self.extractor = FeatureExtractor(
                 configs=self.configs['extractor'],
@@ -120,7 +117,7 @@ class MainProcess():
         self.X, self.image_names = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):
-        self.reduction_method = reduction_prompt(DimReducer.AVAILABLE_REDUCER)
+        self.reduction_method = DimReducer.prompt()
         print("\nStart reducing dimensionality ... ", end="")
         self.reducer = DimReducer().set_algo(
             method=self.reduction_method, 
@@ -133,7 +130,7 @@ class MainProcess():
         DrawResult.draw_reduction(self.df, self.reduction_method)
 
     def clustering_step(self):
-        self.cluster_method = clustering_prompt()
+        self.cluster_method = ClusterAlgo.prompt()
         print("\nStart clustering ... ", end="")
         self.cluster_algo = ClusterAlgo().set_algo(
             method=self.cluster_method, 

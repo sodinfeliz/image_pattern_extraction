@@ -7,7 +7,7 @@ def select_prompt(message: str, choices: list):
     return questionary.select(
         message,
         choices=choices,
-        pointer='\u27A4'
+        pointer='\u27A4',
     ).ask()
 
 
@@ -15,29 +15,8 @@ def directory_prompt(data_dir: str):
     return questionary.path(
         "Input directory:",
         get_paths=lambda: [data_dir],
-        only_directories=True
+        only_directories=True,
     ).ask()
-
-
-def extraction_prompt(backbone_choices: list[str]):
-    return select_prompt(
-        "Select the backbone of the extraction model:",
-        choices=backbone_choices
-    )
-
-
-def reduction_prompt(reduction_choices: list[str]):
-    return select_prompt(
-        "Select the dimensionality reduction algorithm:",
-        choices=reduction_choices
-    )
-
-
-def clustering_prompt():
-    return select_prompt(
-        "Select the clustering algorithm:",
-        choices=["K-Means", "DBSCAN"]
-    )
 
 
 def output_prompt(maximum: int):
@@ -45,7 +24,7 @@ def output_prompt(maximum: int):
     n_smallest = questionary.text(
         f"Output top [1-{maximum}] images:",
         validate=lambda text: text.isdigit() and 1 <= int(text) <= maximum,
-        validate_while_typing=False
+        validate_while_typing=False,
     ).ask()
     return int(n_smallest)
 
