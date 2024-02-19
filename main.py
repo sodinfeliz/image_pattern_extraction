@@ -92,9 +92,9 @@ class MainProcess():
             choices=['Next', 'Repeat', 'Back']
         )
 
-    def hline(self, count=92):
+    def hline(self, symbol='=', count=94):
         """ Prints a horizontal line. """
-        print("\n" + '='*count + "\n")
+        print("\n" + symbol*count + "\n")
 
     def input_step(self):
         if len(list_all_directories(self.data_dir)) == 0:
