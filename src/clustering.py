@@ -30,7 +30,8 @@ class ClusterAlgo():
         raise AttributeError("Directly modification of method disabled.")
 
     def set_algo(self, method: str, configs):
-        assert method in self._AVAILABLE_ALGO, f"Unknown clustering algorithm: {method}."
+        if method not in self._AVAILABLE_ALGO:
+            raise ValueError(f"Unknown clustering algorithm: {method}.")
         self._method = method
         self._algo = self._valid_methods[method](**configs[method])
         return self
@@ -54,7 +55,8 @@ class ClusterAlgo():
         Returns:
             np.ndarray: clustering labels
         """
-        assert self._algo is not None, "Please set the algorithm first."
+        if not self._algo:
+            raise RuntimeError("Algorithm not set. Call 'set_algo' first.")
         self._algo.fit(X_reduced)
         self.labels = self._algo.labels_
         return self.labels

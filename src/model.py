@@ -29,7 +29,8 @@ class Model():
         return self._device
 
     def set_backbone(self, backbone: str):
-        assert isinstance(backbone, str), f"Type mismatched: Expected str but {type(backbone)}"
+        if not isinstance(backbone, str):
+            raise TypeError(f"Type mismatched: Expected str but got {type(backbone).__name__}")
         
         self._backbone = backbone
         if self._backbone == "ResNet":

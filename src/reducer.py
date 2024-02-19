@@ -21,11 +21,9 @@ class DimReducer():
 
     @property
     def method(self):
-        return self._method
-    
-    @method.setter
-    def method(self, _):
-        raise AttributeError("Directly modification of method disabled.")
+        if self._algo:
+            return self._algo.__class__.__name__
+        return None
 
     def display_configs(self):
         if self._algo:
@@ -33,10 +31,18 @@ class DimReducer():
         else:
             print("No algorithm configured.")
 
-    def set_algo(self, method, configs):
-        assert method in self._AVAILABLE_ALGO, f"Unknown reduction method: {method}."
-        self._method = method
-        self._algo = self._AVAILABLE_ALGO[self._method](**configs[self._method])
+    def set_algo(self, method: str, configs: dict):
+        if method not in self._AVAILABLE_ALGO:
+            raise ValueError(f"Unknown reduction method: '{method}'. " +
+                             f"Available methods are: {list(self._AVAILABLE_ALGO.keys())}.")
+        algo_calss = self._AVAILABLE_ALGO[method]
+        self._algo = algo_calss(**configs.get(method, {}))
+        return self
+    
+    def update_algo_config(self, configs: dict):
+        if not self._algo:
+            raise RuntimeError("Algorithm not set. Call 'set_algo' first.")
+        self._algo.set_params(**configs)
         return self
     
     def apply(self, X: np.ndarray, init_dim: int=100) -> np.ndarray:
@@ -50,8 +56,9 @@ class DimReducer():
         Returns:
             np.ndarray: (n_samples, out_features)
         """
-        assert self._algo is not None, "Please set algorithm first."
-        if self._method == "t-SNE":
+        if not self._algo:
+            raise RuntimeError("Please set the algorithm first.")
+        if isinstance(self._algo, TSNE) and X.shape[1] > init_dim:
             X = PCA(n_components=min(len(X), init_dim)).fit_transform(X)
         X_reduced = self._algo.fit_transform(X)
         return X_reduced
@@ -60,5 +67,5 @@ class DimReducer():
     def prompt(cls):
         return select_prompt(
             "Select the dimensionality reduction algorithm:",
-            choices=cls._AVAILABLE_ALGO
+            choices=list(cls._AVAILABLE_ALGO.keys())
         )
