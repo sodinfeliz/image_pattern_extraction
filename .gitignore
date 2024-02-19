@@ -9,5 +9,9 @@ results/*
 *.png
 *.ipynb
 
+# configuratin file
+*.yaml
+!config.yaml
+
 # testing files
 test.py

@@ -1,6 +1,7 @@
-VENV := env
-PYTHON := $(VENV)/bin/python3
-PIP := $(VENV)/bin/pip
+VENV        := env
+PYTHON      := $(VENV)/bin/python3
+PIP         := $(VENV)/bin/pip
+CONFIG_FILE := user-config.yaml
 
 $(VENV)/bin/activate: requirements.txt
 	python3 -m venv $(VENV)
@@ -9,8 +10,11 @@ $(VENV)/bin/activate: requirements.txt
 
 build: $(VENV)/bin/activate
 
-run: build
-	@$(PYTHON) main.py
+user-config.yaml:
+	cp config.yaml user-config.yaml
+
+run: user-config.yaml build
+	@$(PYTHON) main.py --config $(CONFIG_FILE)
 
 clean:
 	rm -rf $(VENV)

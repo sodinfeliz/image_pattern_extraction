@@ -2,6 +2,7 @@ import os
 import yaml
 import shutil
 import pandas as pd
+import argparse
 from rich import print
 
 from src.utils import (
@@ -27,7 +28,7 @@ def load_config(filename):
     return config
 
 
-class MainProcess():
+class MainProcess:
 
     _STEP_DESC = {
         1: "input",
@@ -37,8 +38,8 @@ class MainProcess():
         5: "output"
     }
 
-    def __init__(self):
-        self.load_configs()
+    def __init__(self, config_path: str):
+        self.config_path = config_path
         self.step_methods = {
             "input": self.input_step,
             "extraction": self.extraction_step,
@@ -48,9 +49,13 @@ class MainProcess():
         }
         self.extractor = None
         self.step = 1
+        self.load_configs()
 
     def load_configs(self):
-        self.configs = load_config('config.yaml')
+        if not os.path.exists(self.config_path):
+            raise FileExistsError(f"Can't find the configuration file: {self.config_path}")
+
+        self.configs = load_config(self.config_path)
         self.data_dir = self.configs['global_settings']['data_dir']
         self.result_dir = self.configs['global_settings']['result_dir']
 
@@ -180,6 +185,10 @@ class MainProcess():
 
 
 if __name__ == "__main__":
-    process = MainProcess()
-    process.start()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', type=str, default='user-config.yaml',
+                        help='Path to the configuration file')
+    args = parser.parse_args()
 
+    process = MainProcess(config_path=args.config)
+    process.start()
