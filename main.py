@@ -11,7 +11,7 @@ from src.utils import (
 )
 from src import (
     ClusterAlgo,
-    DimReducer,
+    ReduceAlgo,
     FeatureExtractor,
 )
 from src.draw import DrawResult
@@ -122,23 +122,24 @@ class MainProcess:
         self.X, self.image_names = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):
-        self.reduction_method = DimReducer.prompt(self.configs['reduction'])
+        self.reduction_method = ReduceAlgo.prompt(
+            message="Select the dimensionality reduction algorithm:",
+            configs=self.configs['reduction'])
         print("\nStart reducing dimensionality ... ", end="")
-        self.reducer = DimReducer().set_algo(
+        self.reducer = ReduceAlgo().set_algo(
             method=self.reduction_method, 
             configs=self.configs['reduction'])
         self.X_reduced = self.reducer.apply(self.X)
         print("[bold chartreuse3]completed[/bold chartreuse3]")
-
-        with open(self.config_path, 'w') as file:
-            yaml.safe_dump(self.configs, file, sort_keys=False)
 
         self.df = pd.DataFrame(self.X_reduced)
         self.df.columns = ['x', 'y']
         DrawResult.draw_reduction(self.df, self.reduction_method)
 
     def clustering_step(self):
-        self.cluster_method = ClusterAlgo.prompt()
+        self.cluster_method = ClusterAlgo.prompt(
+            message="Select the clustering algorithm:",
+            configs=self.configs['clustering'])
         print("\nStart clustering ... ", end="")
         self.cluster_algo = ClusterAlgo().set_algo(
             method=self.cluster_method, 
@@ -184,6 +185,10 @@ class MainProcess:
             src_path=self.src_path, 
             dst_path=self.dst_path
         )
+
+        with open(self.config_path, 'w') as file:
+            yaml.safe_dump(self.configs, file, sort_keys=False)
+
         open_directory(self.dst_path)
 
 

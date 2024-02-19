@@ -2,23 +2,19 @@ import json
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
 
-from .prompt import select_prompt
+from .general_algo import GeneralAlgo
 
 
-class ClusterAlgo():
+class ClusterAlgo(GeneralAlgo):
 
-    _AVAILABLE_ALGO = [
-        "K-Means",
-        "DBSCAN"
-    ]
+    _AVAILABLE_ALGO = {
+        "K-Means": KMeans,
+        "DBSCAN": DBSCAN,
+    }
 
     def __init__(self) -> None:
         self._method = None
         self._algo = None
-        self._valid_methods = {
-            "K-Means": KMeans,
-            "DBSCAN": DBSCAN
-        }
         self.labels = None
 
     @property
@@ -33,7 +29,7 @@ class ClusterAlgo():
         if method not in self._AVAILABLE_ALGO:
             raise ValueError(f"Unknown clustering algorithm: {method}.")
         self._method = method
-        self._algo = self._valid_methods[method](**configs[method])
+        self._algo = self._AVAILABLE_ALGO[method](**configs[method])
         return self
     
     def display_configs(self):
@@ -60,10 +56,3 @@ class ClusterAlgo():
         self._algo.fit(X_reduced)
         self.labels = self._algo.labels_
         return self.labels
-    
-    @classmethod
-    def prompt(cls):
-        return select_prompt(
-            "Select the clustering algorithm:",
-            choices=cls._AVAILABLE_ALGO
-        )
