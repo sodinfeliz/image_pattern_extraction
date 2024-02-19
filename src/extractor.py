@@ -7,7 +7,7 @@ from .model import Model
 from .dataset import CustomImageDataset
 
 
-class FeatureExtrator():
+class FeatureExtractor:
 
     AVAILABLE_MODELS = [
         "ResNet",
@@ -17,7 +17,6 @@ class FeatureExtrator():
     def __init__(self, configs: dict, backbone: str='') -> None:
         self.configs = configs
         self.model = None
-
         self.set_model(backbone)
 
     def set_model(self, backbone: str):
@@ -28,12 +27,11 @@ class FeatureExtrator():
         Args:
             backbone (str): backbone of model
         """
-        assert backbone in self.AVAILABLE_MODELS, f"Invalid Backbone {backbone}."
-        if not backbone:
-            self.model = Model()
+        if backbone in self.AVAILABLE_MODELS:
+            self.model = Model(backbone) if backbone else Model()
+            self.model.start_eval()
         else:
-            self.model = Model(backbone)
-        self.model.start_eval(device=self.configs['device'])
+            raise ValueError(f"Invalid Backbone {backbone}.")
 
     def _set_dataset(self, path) -> CustomImageDataset:
         dataset = CustomImageDataset(
@@ -63,25 +61,16 @@ class FeatureExtrator():
         )
         features = np.empty((0, self.configs['backbone'][self.model.backbone]['output']))
 
-        with torch.no_grad():
-            with Progress(
-                TextColumn("[bold blue]{task.description}", justify="right"),
-                BarColumn(bar_width=None, style="green"),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-                TimeRemainingColumn(),
-                expand=True
-            ) as progress:
-                task_id: TaskID = progress.add_task("[cyan]Extracting features: ", total=len(dataloader))
+        with (
+            torch.no_grad(), 
+            Progress() as progress
+        ):
+            task_id: TaskID = progress.add_task("[cyan]Extracting features: ", total=len(dataloader))
 
-                for batch in dataloader:
-                    # Update the progress for each batch processed
-                    progress.update(task_id, advance=1)
-
-                    images = batch.to(self.configs['device'])
-                    out = self.model.predict(images)
-                    features = np.concatenate((features, out))
-
-        if self.configs['device'] == 'cuda':
-            torch.cuda.empty_cache()
+            for batch in dataloader:
+                images = batch.to(self.model.get_device())
+                out = self.model.predict(images)
+                features = np.concatenate((features, out))
+                progress.update(task_id, advance=1)
 
         return features, dataset.get_all_imgs()

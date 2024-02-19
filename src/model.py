@@ -1,12 +1,17 @@
 import torch
-from torchvision.models import (resnet101, ResNet101_Weights, 
-                                efficientnet_b0, EfficientNet_B0_Weights)
+from torchvision.models import (
+    resnet101, 
+    ResNet101_Weights, 
+    efficientnet_b0, 
+    EfficientNet_B0_Weights
+)
 
 
 class Model():
     def __init__(self, backbone: str='ResNet') -> None:
         self._backbone = ''
         self._model = None
+        self._device = None
         self.set_backbone(backbone)
 
     def __repr__(self):
@@ -20,6 +25,9 @@ class Model():
     def backbone(self, _):
         raise AttributeError(f"Directly modification of backbone disabled, using 'set_backbone' instead.")
 
+    def get_device(self):
+        return self._device
+
     def set_backbone(self, backbone: str):
         assert isinstance(backbone, str), f"Type mismatched: Expected str but {type(backbone)}"
         
@@ -32,11 +40,15 @@ class Model():
 
         return self
     
-    def start_eval(self, device='cuda'):
-        self._model.to(device)
+    def start_eval(self):
+        if torch.cuda.is_available():
+            self._device = 'cuda'
+        elif torch.backends.mps.is_available():
+            self._device = 'mps'
+        else:
+            self._device = 'cpu'
+        self._model.to(self._device)
         self._model.eval()
 
     def predict(self, X):
-        return self._model.forward(X).detach().cpu().numpy()
-
-
+        return self._model(X).detach().cpu().numpy()
