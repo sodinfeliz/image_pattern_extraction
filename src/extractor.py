@@ -1,15 +1,16 @@
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
-from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, TaskID
+from rich.progress import Progress, TaskID
 
 from .model import Model
 from .dataset import CustomImageDataset
+from .prompt import select_prompt
 
 
 class FeatureExtractor:
 
-    AVAILABLE_MODELS = [
+    _AVAILABLE_MODELS = [
         "ResNet",
         "EfficientNet"
     ]
@@ -27,20 +28,19 @@ class FeatureExtractor:
         Args:
             backbone (str): backbone of model
         """
-        if backbone in self.AVAILABLE_MODELS:
+        if backbone in self._AVAILABLE_MODELS:
             self.model = Model(backbone) if backbone else Model()
             self.model.start_eval()
         else:
             raise ValueError(f"Invalid Backbone {backbone}.")
 
     def _set_dataset(self, path) -> CustomImageDataset:
-        dataset = CustomImageDataset(
+        return CustomImageDataset(
             main_dir=path,
             input_sz=self.configs['backbone'][self.model.backbone]['input'],
             blur_kernel=self.configs['dataset']['blur_kernel'],
             blur_sigma=self.configs['dataset']['blur_sigma']
         )
-        return dataset
 
     def extract(self, path: str):
         """
@@ -74,3 +74,12 @@ class FeatureExtractor:
                 progress.update(task_id, advance=1)
 
         return features, dataset.get_all_imgs()
+    
+    @classmethod
+    def prompt(cls):
+        return select_prompt(
+            "Select the backbone of the extraction model:",
+            choices=cls._AVAILABLE_MODELS
+        )
+
+

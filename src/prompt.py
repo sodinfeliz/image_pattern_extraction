@@ -1,55 +1,51 @@
 import questionary
-
-from src.utils import list_all_directories
+from prompt_toolkit.shortcuts import CompleteStyle
 
 
 def select_prompt(message: str, choices: list):
     return questionary.select(
         message,
         choices=choices,
-        pointer='\u27A4'
+        pointer='\u27A4',
     ).ask()
 
 
-def directory_prompt(data_dir: str):
-    # TODO Let user directly input the dir name
-    return select_prompt(
-        "Select one of the directory name:",
-        choices=list_all_directories(data_dir)
-    )
+def confirm_prompt(message: str, default: bool=True):
+    return questionary.confirm(
+        message,
+        default=default
+    ).ask()
 
 
-def extraction_prompt(backbone_choices: list[str]):
-    return select_prompt(
-        "Select the backbone of the extraction model:",
-        choices=backbone_choices
-    )
+def autocomplete_prompt(message: str, choices: list[str]):
+    return questionary.autocomplete(
+        message,
+        choices=choices,
+        complete_style=CompleteStyle.MULTI_COLUMN
+    ).ask()
 
 
-def reduction_prompt(reduction_choices: list[str]):
-    return select_prompt(
-        "Select the dimensionality reduction algorithm:",
-        choices=reduction_choices
-    )
+def text_prompt(message: str, validate=None, default=""):
+    return questionary.text(
+        message,
+        default=default,
+        validate=validate,
+        validate_while_typing=False
+    ).ask()
 
 
-def clustering_prompt():
-    return select_prompt(
-        "Select the clustering algorithm:",
-        choices=["K-Means", "DBSCAN"]
-    )
+def input_prompt(data_dir: str):
+    return questionary.path(
+        "Input directory:",
+        get_paths=lambda: [data_dir],
+        only_directories=True,
+    ).ask()
 
 
 def output_prompt(maximum: int):
     maximum = int(maximum)
-    n_smallest = questionary.text(
+    n_smallest = text_prompt(
         f"Output top [1-{maximum}] images:",
         validate=lambda text: text.isdigit() and 1 <= int(text) <= maximum,
-        validate_while_typing=False
-    ).ask()
+    )
     return int(n_smallest)
-
-
-if __name__ == "__main__":
-    path = directory_prompt(data_dir='./data')
-    print(path)

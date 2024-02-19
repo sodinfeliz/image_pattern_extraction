@@ -2,6 +2,7 @@ import os
 import yaml
 import shutil
 import pandas as pd
+import argparse
 from rich import print
 
 from src.utils import (
@@ -10,15 +11,12 @@ from src.utils import (
 )
 from src import (
     ClusterAlgo,
-    DimReducer,
+    ReduceAlgo,
     FeatureExtractor,
 )
 from src.draw import DrawResult
 from src.prompt import (
-    directory_prompt,
-    extraction_prompt,
-    reduction_prompt,
-    clustering_prompt,
+    input_prompt,
     output_prompt,
     select_prompt,
 )
@@ -30,7 +28,7 @@ def load_config(filename):
     return config
 
 
-class MainProcess():
+class MainProcess:
 
     _STEP_DESC = {
         1: "input",
@@ -40,8 +38,8 @@ class MainProcess():
         5: "output"
     }
 
-    def __init__(self):
-        self.load_configs()
+    def __init__(self, config_path: str):
+        self.config_path = config_path
         self.step_methods = {
             "input": self.input_step,
             "extraction": self.extraction_step,
@@ -51,9 +49,13 @@ class MainProcess():
         }
         self.extractor = None
         self.step = 1
+        self.load_configs()
 
     def load_configs(self):
-        self.configs = load_config('config.yaml')
+        if not os.path.exists(self.config_path):
+            raise FileExistsError(f"Can't find the configuration file: {self.config_path}")
+
+        self.configs = load_config(self.config_path)
         self.data_dir = self.configs['global_settings']['data_dir']
         self.result_dir = self.configs['global_settings']['result_dir']
 
@@ -92,15 +94,15 @@ class MainProcess():
             choices=['Next', 'Repeat', 'Back']
         )
 
-    def hline(self, count=92):
+    def hline(self, symbol='=', count=94):
         """ Prints a horizontal line. """
-        print("\n" + '='*count + "\n")
+        print("\n" + symbol*count + "\n")
 
     def input_step(self):
         if len(list_all_directories(self.data_dir)) == 0:
             raise Exception("There's no available image data.")
         
-        self.dirname = directory_prompt(data_dir=self.data_dir)
+        self.dirname = input_prompt(data_dir=self.data_dir)
         self.src_path = os.path.join(self.data_dir, self.dirname)
         print(f"Input data path: {self.src_path}")
 
@@ -110,7 +112,7 @@ class MainProcess():
         os.mkdir(self.dst_path)
         
     def extraction_step(self):
-        self.backbone = extraction_prompt(FeatureExtractor.AVAILABLE_MODELS)
+        self.backbone = FeatureExtractor.prompt()
         if self.extractor is None:
             self.extractor = FeatureExtractor(
                 configs=self.configs['extractor'],
@@ -120,9 +122,11 @@ class MainProcess():
         self.X, self.image_names = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):
-        self.reduction_method = reduction_prompt(DimReducer.AVAILABLE_REDUCER)
+        self.reduction_method = ReduceAlgo.prompt(
+            message="Select the dimensionality reduction algorithm:",
+            configs=self.configs['reduction'])
         print("\nStart reducing dimensionality ... ", end="")
-        self.reducer = DimReducer().set_algo(
+        self.reducer = ReduceAlgo().set_algo(
             method=self.reduction_method, 
             configs=self.configs['reduction'])
         self.X_reduced = self.reducer.apply(self.X)
@@ -133,7 +137,9 @@ class MainProcess():
         DrawResult.draw_reduction(self.df, self.reduction_method)
 
     def clustering_step(self):
-        self.cluster_method = clustering_prompt()
+        self.cluster_method = ClusterAlgo.prompt(
+            message="Select the clustering algorithm:",
+            configs=self.configs['clustering'])
         print("\nStart clustering ... ", end="")
         self.cluster_algo = ClusterAlgo().set_algo(
             method=self.cluster_method, 
@@ -179,10 +185,18 @@ class MainProcess():
             src_path=self.src_path, 
             dst_path=self.dst_path
         )
+
+        with open(self.config_path, 'w') as file:
+            yaml.safe_dump(self.configs, file, sort_keys=False)
+
         open_directory(self.dst_path)
 
 
 if __name__ == "__main__":
-    process = MainProcess()
-    process.start()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', type=str, default='user-config.yaml',
+                        help='Path to the configuration file')
+    args = parser.parse_args()
 
+    process = MainProcess(config_path=args.config)
+    process.start()

@@ -1,38 +1,22 @@
-import json
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
 
+from .general_algo import GeneralAlgo
 
-class DimReducer():
 
-    AVAILABLE_REDUCER = [
-        "t-SNE",
-        "UMAP"
-    ]
+class ReduceAlgo(GeneralAlgo):
+
+    _AVAILABLE_ALGO = {
+        "t-SNE": TSNE,
+        "UMAP": UMAP
+    }
+    _ALGO_NAME = "reduction"
 
     def __init__(self) -> None:
-        self.method = None
-        self._algo = None
-        self.reduction_methods = {
-            "t-SNE": TSNE,
-            "UMAP": UMAP
-        }
-        self.configs = dict()
+        super().__init__()
 
-    def display_configs(self):
-        if self._algo:
-            print(json.dumps(self._algo.get_params(), indent=4))
-        else:
-            print("No algorithm configured.")
-
-    def set_algo(self, method, configs):
-        assert method in self.AVAILABLE_REDUCER, f"Unknown reduction method: {method}."
-        self.method = method
-        self._algo = self.reduction_methods[method](**configs[method])
-        return self
-    
     def apply(self, X: np.ndarray, init_dim: int=100) -> np.ndarray:
         """
         Apply the dimensional reduction algorithm to the `X`
@@ -44,8 +28,9 @@ class DimReducer():
         Returns:
             np.ndarray: (n_samples, out_features)
         """
-        assert self._algo is not None, "Please set algorithm first."
-        if self.method == "t-SNE":
+        if not self._algo:
+            raise RuntimeError("Please set the algorithm first.")
+        if isinstance(self._algo, TSNE) and X.shape[1] > init_dim:
             X = PCA(n_components=min(len(X), init_dim)).fit_transform(X)
         X_reduced = self._algo.fit_transform(X)
         return X_reduced
