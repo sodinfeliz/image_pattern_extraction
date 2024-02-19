@@ -122,13 +122,16 @@ class MainProcess:
         self.X, self.image_names = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):
-        self.reduction_method = DimReducer.prompt()
+        self.reduction_method = DimReducer.prompt(self.configs['reduction'])
         print("\nStart reducing dimensionality ... ", end="")
         self.reducer = DimReducer().set_algo(
             method=self.reduction_method, 
             configs=self.configs['reduction'])
         self.X_reduced = self.reducer.apply(self.X)
         print("[bold chartreuse3]completed[/bold chartreuse3]")
+
+        with open(self.config_path, 'w') as file:
+            yaml.safe_dump(self.configs, file, sort_keys=False)
 
         self.df = pd.DataFrame(self.X_reduced)
         self.df.columns = ['x', 'y']
