@@ -1,6 +1,5 @@
 import sys
 import logging
-logger = logging.getLogger(__name__)
 
 import torch
 import numpy as np
@@ -11,6 +10,7 @@ from .model import Model
 from .dataset import CustomImageDataset
 from .prompt import select_prompt
 
+logger = logging.getLogger(__name__)
 
 
 class FeatureExtractor:
