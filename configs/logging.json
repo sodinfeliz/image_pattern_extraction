@@ -39,7 +39,7 @@
     },
     "loggers": {
         "root": {
-            "level": "DEBUG",
+            "level": "INFO",
             "handlers": [
                 "stderr",
                 "file_json"
