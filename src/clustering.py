@@ -1,8 +1,12 @@
-import json
+import sys
+import logging
+
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
 
 from .general_algo import GeneralAlgo
+
+logger = logging.getLogger(__name__)
 
 
 class ClusterAlgo(GeneralAlgo):
@@ -14,7 +18,7 @@ class ClusterAlgo(GeneralAlgo):
 
     def __init__(self) -> None:
         super().__init__()
-        self.labels = None
+        self.labels: np.ndarray = None
 
     def apply(self, X_reduced) -> np.ndarray:
         """ 
@@ -27,7 +31,8 @@ class ClusterAlgo(GeneralAlgo):
             np.ndarray: clustering labels
         """
         if not self._algo:
-            raise RuntimeError("Algorithm not set. Call 'set_algo' first.")
+            logger.exception("Algorithm not set. Call 'set_algo' first.")
+            sys.exit(1)
         self._algo.fit(X_reduced)
         self.labels = self._algo.labels_
         return self.labels

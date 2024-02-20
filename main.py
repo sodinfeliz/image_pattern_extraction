@@ -1,13 +1,14 @@
 import os
-import json
 import sys
-import yaml
+import json
 import shutil
-import pandas as pd
 import argparse
-import pathlib
 import logging
 import logging.config
+import pathlib
+
+import yaml
+import pandas as pd
 from rich import print
 
 from src import (
@@ -40,7 +41,7 @@ class MainProcess:
 
     _STEP_DESC = {
         1: "input",
-        2: "extractions",
+        2: "extraction",
         3: "reduction",
         4: "clustering",
         5: "output"
@@ -67,8 +68,13 @@ class MainProcess:
             self.data_dir = self.configs['global_settings']['data_dir']
             self.result_dir = self.configs['global_settings']['result_dir']
         except FileNotFoundError:
-            logging.exception(f"Can't find the configuration file: {self.config_path}")
-        
+            logger.exception(f"Can't find the configuration file: {self.config_path}")
+            sys.exit(1)
+        except KeyError as error:
+            logger.exception(f"KeyError: The key '{error.args[0]}' is missing" +
+                             f"from global_settings in {self.config_path}.")
+            sys.exit(1)
+
     def start(self):
         """ Start the main process loop. """ 
         while not self.stop_process and self.step <= len(self._STEP_DESC):
@@ -213,8 +219,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', type=str, default='user-config.yaml',
                         help='Path to the configuration file')
     args = parser.parse_args()
-
+    
     setup_logging()
-    logging.basicConfig(level="INFO")
     process = MainProcess(config_path=args.config)
     process.start()

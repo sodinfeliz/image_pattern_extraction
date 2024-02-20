@@ -1,3 +1,7 @@
+import sys
+import logging
+logger = logging.getLogger(__name__)
+
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
@@ -8,6 +12,7 @@ from .dataset import CustomImageDataset
 from .prompt import select_prompt
 
 
+
 class FeatureExtractor:
 
     _AVAILABLE_MODELS = [
@@ -16,11 +21,11 @@ class FeatureExtractor:
     ]
 
     def __init__(self, configs: dict, backbone: str='') -> None:
-        self.configs = configs
-        self.model = None
+        self.configs: dict = configs
+        self.model: Model = None
         self.set_model(backbone)
 
-    def set_model(self, backbone: str):
+    def set_model(self, backbone: str) -> None:
         """ 
         Set the backbone for the model,
         only "EfficientNet", and "ResNet" available.
@@ -32,7 +37,8 @@ class FeatureExtractor:
             self.model = Model(backbone) if backbone else Model()
             self.model.start_eval()
         else:
-            raise ValueError(f"Invalid Backbone {backbone}.")
+            logger.exception(f"Invalid Backbone '{backbone}'.")
+            sys.exit(1)
 
     def _set_dataset(self, path) -> CustomImageDataset:
         return CustomImageDataset(
