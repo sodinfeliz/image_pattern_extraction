@@ -79,6 +79,7 @@ class MainProcess:
 
     def start(self):
         """ Start the main process loop. """ 
+        self.hline()
         while not self.stop_process and self.step <= len(self._STEP_DESC):
             step_desc = self._STEP_DESC[self.step]
             method = self.step_methods.get(step_desc)
@@ -103,8 +104,8 @@ class MainProcess:
         elif response == "Back":
             self.step = max(self.step-1, 1)
         elif response == "Exit":
-            print("\nExit the program.\n")
-            sys.exit(0)
+            print("\nExit the program.")
+            self.stop_process = True
 
         self.hline()
 
