@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def setup_logging():
+    """ Set up the logging configuration. """
     logging_config_file = pathlib.Path("configs/logging.json")
     with open(logging_config_file) as f_in:
         logging_config = json.load(f_in)
@@ -62,6 +63,7 @@ class MainProcess:
         self.load_configs()
 
     def load_configs(self):
+        """ Set the configurations from the user configuration file """
         try:
             with open(self.config_path, 'r') as file:
                 self.configs = yaml.safe_load(file)
@@ -120,6 +122,7 @@ class MainProcess:
         print("\n" + symbol*count + "\n")
 
     def input_step(self):
+        """ Input step: Select the data directory. """
         if len(list_all_directories(self.data_dir)) == 0:
             raise Exception("There's no available image data.")
         
@@ -133,6 +136,7 @@ class MainProcess:
         os.mkdir(self.dst_path)
         
     def extraction_step(self):
+        """ Extraction step: Extract features from the input images. """
         self.backbone = FeatureExtractor.prompt()
         if self.extractor is None:
             self.extractor = FeatureExtractor(
@@ -143,6 +147,7 @@ class MainProcess:
         self.X, self.image_names = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):
+        """ Reduction step: Reduce the dimensionality of the extracted features. """
         self.reduction_method = ReduceAlgo.prompt(
             message="Select the dimensionality reduction algorithm:",
             configs=self.configs['reduction'])
@@ -158,6 +163,7 @@ class MainProcess:
         DrawResult.draw_reduction(self.df, self.reduction_method)
 
     def clustering_step(self):
+        """ Clustering step: Cluster the reduced features. """
         self.cluster_method = ClusterAlgo.prompt(
             message="Select the clustering algorithm:",
             configs=self.configs['clustering'])
@@ -189,6 +195,7 @@ class MainProcess:
         )
 
     def output_step(self):
+        """ Output step: Output the results. """
         self.df_merge = pd.merge(self.df_filter, self.df_mean, how='inner', on='cluster')
         self.df_merge['dist_square'] = (self.df_merge['x'] - self.df_merge['mean_x'])**2 + \
                                        (self.df_merge['y'] - self.df_merge['mean_y'])**2

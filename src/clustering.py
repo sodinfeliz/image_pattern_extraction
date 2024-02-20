@@ -22,10 +22,10 @@ class ClusterAlgo(GeneralAlgo):
 
     def apply(self, X_reduced) -> np.ndarray:
         """ 
-        Apply the clustering algorithm on X_reduced
+        Apply the clustering algorithm to the reduced features.
 
         Args:
-            X_reduced (np.ndarray): Reduced features of X
+            X_reduced (np.ndarray): Reduced features
 
         Returns:
             np.ndarray: clustering labels
