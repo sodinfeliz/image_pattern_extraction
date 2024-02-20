@@ -77,6 +77,9 @@ class MainProcess:
                              f"from global_settings in {self.config_path}.")
             sys.exit(1)
 
+        self.hline(" Load configurations ")
+        print("Configuration file: ", self.config_path)
+
     def start(self):
         """ Start the main process loop. """ 
         while not self.stop_process and self.step <= len(self._STEP_DESC):
