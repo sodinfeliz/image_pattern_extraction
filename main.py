@@ -79,22 +79,25 @@ class MainProcess:
 
     def start(self):
         """ Start the main process loop. """ 
-        self.hline()
         while not self.stop_process and self.step <= len(self._STEP_DESC):
             step_desc = self._STEP_DESC[self.step]
             method = self.step_methods.get(step_desc)
             try:
+                self.hline(f" Step {self.step}: {step_desc.capitalize()} ")
                 method()
                 self.proceed()
             except TypeError:
                 self.stop_process = True
                 logging.exception("Undefined step.")
+        else:
+            text = " Process stopped " if self.stop_process else " Process completed "
+            self.hline(text)
 
     def proceed(self):
         """ Handles the navigation between steps. """
         step_desc = self._STEP_DESC[self.step]
 
-        if step_desc in ["extraction", "output"]:
+        if step_desc in ["extraction", "output"]: # Skip the prompt for these steps
             response = "Next"
         else:
             response = self.prompt_next_action(step_desc)
@@ -104,10 +107,7 @@ class MainProcess:
         elif response == "Back":
             self.step = max(self.step-1, 1)
         elif response == "Exit":
-            print("\nExit the program.")
             self.stop_process = True
-
-        self.hline()
 
     def prompt_next_action(self, step_desc: str):
         """ Prompts the user for the next action after a step is completed. """
@@ -118,9 +118,9 @@ class MainProcess:
             choices=['Next', 'Repeat', 'Back', 'Exit']
         )
 
-    def hline(self, symbol: str='=', count: int=80):
-        """ Prints a horizontal line. """
-        print("\n" + symbol*count + "\n")
+    def hline(self, text: str):
+        """ Print a horizontal line with the given text."""
+        print(f"\n{text:=^80}\n")
 
     def input_step(self):
         """ Input step: Select the data directory. """
