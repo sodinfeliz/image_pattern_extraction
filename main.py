@@ -1,9 +1,14 @@
 import os
 import sys
-import yaml
+import json
 import shutil
-import pandas as pd
 import argparse
+import logging
+import logging.config
+import pathlib
+
+import yaml
+import pandas as pd
 from rich import print
 
 from src import (
@@ -22,12 +27,15 @@ from src.prompt import (
     select_prompt,
 )
 
+logger = logging.getLogger(__name__)
 
-def load_config(filename):
-    with open(filename, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
 
+def setup_logging():
+    logging_config_file = pathlib.Path("configs/logging.json")
+    with open(logging_config_file) as f_in:
+        logging_config = json.load(f_in)
+    logging.config.dictConfig(logging_config)
+    
 
 class MainProcess:
 
@@ -50,26 +58,34 @@ class MainProcess:
         }
         self.extractor = None
         self.step = 1
+        self.stop_process = False
         self.load_configs()
 
     def load_configs(self):
-        if not os.path.exists(self.config_path):
-            raise FileExistsError(f"Can't find the configuration file: {self.config_path}")
-
-        self.configs = load_config(self.config_path)
-        self.data_dir = self.configs['global_settings']['data_dir']
-        self.result_dir = self.configs['global_settings']['result_dir']
+        try:
+            with open(self.config_path, 'r') as file:
+                self.configs = yaml.safe_load(file)
+            self.data_dir = self.configs['global_settings']['data_dir']
+            self.result_dir = self.configs['global_settings']['result_dir']
+        except FileNotFoundError:
+            logger.exception(f"Can't find the configuration file: {self.config_path}")
+            sys.exit(1)
+        except KeyError as error:
+            logger.exception(f"KeyError: The key '{error.args[0]}' is missing" +
+                             f"from global_settings in {self.config_path}.")
+            sys.exit(1)
 
     def start(self):
         """ Start the main process loop. """ 
-        while self.step <= len(self._STEP_DESC):
+        while not self.stop_process and self.step <= len(self._STEP_DESC):
             step_desc = self._STEP_DESC[self.step]
             method = self.step_methods.get(step_desc)
-            if method:
+            try:
                 method()
                 self.proceed()
-            else:
-                raise AttributeError("Undefined step.") 
+            except TypeError:
+                self.stop_process = True
+                logging.exception("Undefined step.")
 
     def proceed(self):
         """ Handles the navigation between steps. """
@@ -203,6 +219,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', type=str, default='user-config.yaml',
                         help='Path to the configuration file')
     args = parser.parse_args()
-
+    
+    setup_logging()
     process = MainProcess(config_path=args.config)
     process.start()

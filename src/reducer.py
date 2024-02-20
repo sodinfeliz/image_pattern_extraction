@@ -1,9 +1,14 @@
+import sys
+import logging
+
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
 
 from .general_algo import GeneralAlgo
+
+logger = logging.getLogger(__name__)
 
 
 class ReduceAlgo(GeneralAlgo):
@@ -29,7 +34,8 @@ class ReduceAlgo(GeneralAlgo):
             np.ndarray: (n_samples, out_features)
         """
         if not self._algo:
-            raise RuntimeError("Please set the algorithm first.")
+            logger.exception("Please set the algorithm first.")
+            sys.exit(1)
         if isinstance(self._algo, TSNE) and X.shape[1] > init_dim:
             X = PCA(n_components=min(len(X), init_dim)).fit_transform(X)
         X_reduced = self._algo.fit_transform(X)
