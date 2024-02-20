@@ -5,6 +5,19 @@
         "only_message": {
             "format": "%(message)s",
             "datefmt": "%Y-%m-%dT%H:%M:%S"
+        },
+        "json": {
+            "()": "src.mylogger.CustomJSONFormatter",
+            "fmt_keys": {
+                "level": "levelname",
+                "message": "message",
+                "timestamp": "timestamp",
+                "logger": "name",
+                "module": "module",
+                "function": "funcName",
+                "line": "lineno",
+                "thread_name": "threadName"
+            }
         }
     },
     "handlers": {
@@ -14,13 +27,22 @@
             "formatter": "only_message",
             "rich_tracebacks": true,
             "tracebacks_show_locals": true
+        },
+        "file_json": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DEBUG",
+            "formatter": "json",
+            "filename": "logs/app.log.jsonl",
+            "maxBytes": 10000000,
+            "backupCount": 10
         }
     },
     "loggers": {
         "root": {
             "level": "DEBUG",
             "handlers": [
-                "stderr"
+                "stderr",
+                "file_json"
             ]
         }
     }
