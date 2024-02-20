@@ -1,0 +1,27 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "only_message": {
+            "format": "%(message)s",
+            "datefmt": "%Y-%m-%dT%H:%M:%S"
+        }
+    },
+    "handlers": {
+        "stderr": {
+            "class": "rich.logging.RichHandler",
+            "level": "WARNING",
+            "formatter": "only_message",
+            "rich_tracebacks": true,
+            "tracebacks_show_locals": true
+        }
+    },
+    "loggers": {
+        "root": {
+            "level": "DEBUG",
+            "handlers": [
+                "stderr"
+            ]
+        }
+    }
+}
