@@ -9,6 +9,9 @@ results/*
 *.png
 *.ipynb
 
+logs/*
+!logs/.gitkeep
+
 # configuratin file
 *.yaml
 !config.yaml
