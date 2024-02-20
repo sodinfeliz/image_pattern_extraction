@@ -7,6 +7,11 @@ def select_prompt(message: str, choices: list):
         message,
         choices=choices,
         pointer='\u27A4',
+        style=questionary.Style([
+            ('instruction', 'fg:#aaaaaa italic'),
+            ('pointer', 'fg:#00ff00 bold'),
+            ('highlighted', 'fg:#ffffff bg:#0000ff underline'),
+        ])
     ).ask()
 
 
@@ -43,7 +48,6 @@ def input_prompt(data_dir: str):
 
 
 def output_prompt(maximum: int):
-    maximum = int(maximum)
     n_smallest = text_prompt(
         f"Output top [1-{maximum}] images:",
         validate=lambda text: text.isdigit() and 1 <= int(text) <= maximum,

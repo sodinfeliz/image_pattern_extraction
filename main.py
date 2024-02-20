@@ -204,7 +204,7 @@ class MainProcess:
         self.df_merge['dist_square'] = (self.df_merge['x'] - self.df_merge['mean_x'])**2 + \
                                        (self.df_merge['y'] - self.df_merge['mean_y'])**2
         self.df_merge.index = self.df_filter.index
-        n_smallest = output_prompt(maximum=self.df_merge.groupby('cluster')['x'].count().min())
+        n_smallest = output_prompt(maximum=int(self.df_merge.groupby('cluster')['x'].count().min()))
 
         df_rank = self.df_merge.reset_index().rename(columns={'index': 'original_index'})
         df_rank = df_rank.sort_values(['cluster', 'dist_square'])
