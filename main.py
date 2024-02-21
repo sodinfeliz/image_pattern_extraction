@@ -10,6 +10,7 @@ import pathlib
 import yaml
 import pandas as pd
 from rich import print
+from rich.progress import Progress, TaskID 
 
 from src import (
     ClusterAlgo,
@@ -60,9 +61,9 @@ class MainProcess:
         self.extractor = None
         self.step = 1
         self.stop_process = False
-        self.load_configs()
+        self._load_configs()
 
-    def load_configs(self):
+    def _load_configs(self):
         """ Set the configurations from the user configuration file """
         try:
             with open(self.config_path, 'r') as file:
@@ -77,7 +78,7 @@ class MainProcess:
                              f"from global_settings in {self.config_path}.")
             sys.exit(1)
 
-        self.hline(" Load configurations ")
+        self._hline(" Load configurations ")
         print("Configuration file: ", self.config_path)
 
     def start(self):
@@ -86,24 +87,24 @@ class MainProcess:
             step_desc = self._STEP_DESC[self.step]
             method = self.step_methods.get(step_desc)
             try:
-                self.hline(f" Step {self.step}: {step_desc.capitalize()} ")
+                self._hline(f" Step {self.step}: {step_desc.capitalize()} ")
                 method()
-                self.proceed()
+                self._proceed()
             except TypeError:
                 self.stop_process = True
                 logging.exception("Undefined step.")
         else:
             text = " Process stopped " if self.stop_process else " Process completed "
-            self.hline(text)
+            self._hline(text)
 
-    def proceed(self):
+    def _proceed(self):
         """ Handles the navigation between steps. """
         step_desc = self._STEP_DESC[self.step]
 
         if step_desc in ["extraction", "output"]: # Skip the prompt for these steps
             response = "Next"
         else:
-            response = self.prompt_next_action(step_desc)
+            response = self._prompt_next_action(step_desc)
 
         if response == "Next":
             self.step += 1
@@ -112,7 +113,7 @@ class MainProcess:
         elif response == "Exit":
             self.stop_process = True
 
-    def prompt_next_action(self, step_desc: str):
+    def _prompt_next_action(self, step_desc: str):
         """ Prompts the user for the next action after a step is completed. """
         print(f"\n[bold dodger_blue1]{step_desc.capitalize()}[/bold dodger_blue1] step completed. ", end="")
         print("What would you like to do next?")
@@ -121,7 +122,7 @@ class MainProcess:
             choices=['Next', 'Repeat', 'Back', 'Exit']
         )
 
-    def hline(self, text: str):
+    def _hline(self, text: str):
         """ Print a horizontal line with the given text."""
         print(f"\n{text:=^80}\n")
 
@@ -164,7 +165,9 @@ class MainProcess:
 
         self.df = pd.DataFrame(self.X_reduced)
         self.df.columns = ['x', 'y']
-        DrawResult.draw_reduction(self.df, self.reduction_method)
+        DrawResult.draw_reduction(
+            self.df, 
+            reduction_method=self.reduction_method)
 
     def clustering_step(self):
         """ Clustering step: Cluster the reduced features. """
@@ -200,11 +203,13 @@ class MainProcess:
 
     def output_step(self):
         """ Output step: Output the results. """
+
         self.df_merge = pd.merge(self.df_filter, self.df_mean, how='inner', on='cluster')
         self.df_merge['dist_square'] = (self.df_merge['x'] - self.df_merge['mean_x'])**2 + \
                                        (self.df_merge['y'] - self.df_merge['mean_y'])**2
         self.df_merge.index = self.df_filter.index
-        n_smallest = output_prompt(maximum=int(self.df_merge.groupby('cluster')['x'].count().min()))
+
+        n_smallest = output_prompt(int(self.df_merge.groupby('cluster')['x'].count().min()))
 
         df_rank = self.df_merge.reset_index().rename(columns={'index': 'original_index'})
         df_rank = df_rank.sort_values(['cluster', 'dist_square'])
@@ -212,11 +217,27 @@ class MainProcess:
         df_rank['rank'] = df_rank.groupby('cluster').cumcount()
         df_rank = df_rank.pivot(index='cluster', columns='rank', values='original_index')
 
+        # draw top n images
         DrawResult.draw_top_n_output(
-            df_rank, self.image_names, 
+            df_rank, 
+            image_names=self.image_names, 
             src_path=self.src_path, 
             dst_path=self.dst_path
         )
+
+        # copy images to the cluster directory
+        r, c = len(df_rank), len(df_rank.columns)
+        with Progress() as progress:
+            task_id: TaskID = progress.add_task("[cyan]Copying images: ", total=r*c)
+            for i in range(r):
+                cluster_dir = os.path.join(self.dst_path, f"cluster_{i+1}")
+                os.mkdir(cluster_dir)
+                for j in range(c):
+                    image_name = self.image_names[df_rank.iloc[i, j]]
+                    src = os.path.join(self.src_path, image_name)
+                    dst = os.path.join(cluster_dir, image_name)
+                    shutil.copy(src, dst)
+                    progress.update(task_id, advance=1)
 
         # override user configuration file
         with open(self.config_path, 'w') as file:

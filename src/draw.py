@@ -16,10 +16,22 @@ def load_image_to_fixed_width(path: str, width: int=256):
 
 class DrawResult():
     
-    PLOTLY_THEME = "plotly_dark"
+    PLOTLY_THEME: str = "plotly_dark"
 
     @classmethod
-    def draw_reduction(cls, df: pd.DataFrame, reduction_method: str):
+    def draw_reduction(
+        cls,
+        df: pd.DataFrame,
+        *,
+        reduction_method: str,
+    ) -> None:
+        """ 
+        Draw the reduction result, and show on the browser.
+        
+        Args:
+            df (pd.DataFrame): dataframe with reduced features
+            reduction_method (str): name of the reduction method
+        """
         trace0 = go.Scatter(
             x=df['x'], 
             y=df['y'],
@@ -44,7 +56,23 @@ class DrawResult():
         fig.show()
 
     @classmethod
-    def draw_clustering(cls, df_filter, df_mean, reduction_method, cluster_method):
+    def draw_clustering(
+        cls,
+        df_filter: pd.DataFrame,
+        df_mean: pd.DataFrame,
+        *,
+        reduction_method: str,
+        cluster_method: str
+    ):
+        """ 
+        Draw the clustering result, and show on the browser.
+        
+        Args:
+            df_filter (pd.DataFrame): dataframe with cluster labels
+            df_mean (pd.DataFrame): dataframe with cluster means
+            reduction_method (str): name of the reduction method
+            cluster_method (str): name of the clustering method
+        """
         trace0 = go.Scatter(
             x=df_filter['x'], 
             y=df_filter['y'],
@@ -97,11 +125,29 @@ class DrawResult():
         fig.show()
 
     @classmethod
-    def draw_top_n_output(cls, df_rank: pd.DataFrame, image_names: list, 
-                               src_path: str, dst_path: str):
+    def draw_top_n_output(
+        cls,
+        df_rank: pd.DataFrame,
+        *,
+        image_names: list,
+        src_path: str,
+        dst_path: str,
+        summary_count: int=5,
+    ):
+        """ 
+        Draw the top 'summary_count' images nearest to the cluster's mean.
+        Then save the output image to the destination path.
+        
+        Args:
+            df_rank (pd.DataFrame): rank of the top n images
+            image_names (list): list of image names
+            src_path (str): source path of the images
+            dst_path (str): destination path of the output image
+        """
         r, c = len(df_rank), len(df_rank.columns)
-        fig_im = make_subplots(rows=r, cols=c)
+        c = min(c, summary_count)
 
+        fig_im = make_subplots(rows=r, cols=c)
         for i in range(r):
             for j in range(c):
                 index = df_rank.loc[i][j]
@@ -114,7 +160,7 @@ class DrawResult():
                     go.Image(z=im),
                     row=i+1, col=j+1
                 )
-
+        
         fig_im.update_layout(
             width=c * 200, 
             height=r*150 + 100,
@@ -129,4 +175,3 @@ class DrawResult():
         fig_im.update_xaxes(showticklabels=False)
         fig_im.update_yaxes(showticklabels=False)
         fig_im.write_image(os.path.join(dst_path, f'top_{c}_samples.png'))
-

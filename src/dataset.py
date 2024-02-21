@@ -6,7 +6,14 @@ from PIL import Image
 
 
 class CustomImageDataset(Dataset):
-    def __init__(self, main_dir, input_sz: int, blur_kernel: int, blur_sigma: int):
+    def __init__(
+        self,
+        *,
+        main_dir: str,
+        input_sz: int,
+        blur_kernel: int,
+        blur_sigma: int,
+    ):
         self.main_dir = main_dir
         self.transform = transforms.Compose([
             transforms.GaussianBlur(blur_kernel, sigma=blur_sigma),

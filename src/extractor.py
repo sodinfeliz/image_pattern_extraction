@@ -59,7 +59,7 @@ class FeatureExtractor:
             NDArray: (n_samples, n_features)
             list: list of images name
         """
-        dataset = self._set_dataset(path)
+        dataset: CustomImageDataset = self._set_dataset(path)
         dataloader = DataLoader(
             dataset=dataset, 
             batch_size=self.configs['dataset']['batch_size'], 
