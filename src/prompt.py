@@ -28,7 +28,8 @@ def autocomplete_prompt(message: str, choices: list[str]):
     return questionary.autocomplete(
         message,
         choices=choices,
-        complete_style=CompleteStyle.MULTI_COLUMN
+        complete_style=CompleteStyle.MULTI_COLUMN,
+        validate=lambda text: text in choices
     ).ask()
 
 

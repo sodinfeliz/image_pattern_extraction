@@ -227,7 +227,7 @@ class MainProcess:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='user-config.yaml',
+    parser.add_argument('-c', '--config', type=str, default='./configs/user-config.yaml',
                         help='Path to the configuration file')
     args = parser.parse_args()
     
