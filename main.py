@@ -191,7 +191,9 @@ class MainProcess:
             self.df_mean.drop(-1, inplace=True)
         else:
             self.df_filter = self.df.copy()
-
+        if self.df_outlier is not None:
+            print("Outliers count: ", len(self.df_outlier))
+            
         print("Clustering mean: ")
         print(self.df_mean)
 
@@ -238,6 +240,16 @@ class MainProcess:
                     dst = os.path.join(cluster_dir, image_name)
                     shutil.copy(src, dst)
                     progress.update(task_id, advance=1)
+
+        # copy outliers to the outlier directory
+        if self.df_outlier is not None:
+            outlier_dir = os.path.join(self.dst_path, "outliers")
+            os.mkdir(outlier_dir)
+            for i in range(len(self.df_outlier)):
+                image_name = self.image_names[self.df_outlier.index[i]]
+                src = os.path.join(self.src_path, image_name)
+                dst = os.path.join(outlier_dir, image_name)
+                shutil.copy(src, dst)
 
         # override user configuration file
         with open(self.config_path, 'w') as file:
