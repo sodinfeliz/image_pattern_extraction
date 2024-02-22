@@ -42,7 +42,7 @@ def text_prompt(message: str, validate=None, default=""):
     ).ask()
 
 
-def input_prompt(data_dir: str):
+def input_prompt(data_dir: str) -> str:
     def check_dir_exists(path: str):
         return os.path.exists(os.path.join(data_dir, path))
 

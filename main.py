@@ -129,9 +129,13 @@ class MainProcess:
     def input_step(self):
         """ Input step: Select the data directory. """
         if len(list_all_directories(self.data_dir)) == 0:
-            raise Exception("There's no available image data.")
+            logging.exception("There's no available image data.")
+            sys.exit(1)
         
         self.dirname = input_prompt(data_dir=self.data_dir)
+        if not self.dirname:
+            self.dirname = list_all_directories(self.data_dir)[0]
+
         self.src_path = os.path.join(self.data_dir, self.dirname)
         print(f"Input data path: {self.src_path}")
 
