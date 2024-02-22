@@ -2,6 +2,8 @@ import sys
 import logging
 
 import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
@@ -36,7 +38,21 @@ class ReduceAlgo(GeneralAlgo):
         if not self._algo:
             logger.exception("Please set the algorithm first.")
             sys.exit(1)
-        if isinstance(self._algo, TSNE) and X.shape[1] > init_dim:
-            X = PCA(n_components=min(len(X), init_dim)).fit_transform(X)
-        X_reduced = self._algo.fit_transform(X)
+        elif len(X) <= init_dim:
+            logger.exception(f"Input dimension must greater than {init_dim}.")
+            sys.exit(1)
+
+        if isinstance(self._algo, TSNE):
+            pipeline = Pipeline([
+                ('scaler', StandardScaler()),
+                ('pca', PCA(n_components=init_dim)),
+                ('tsne', self._algo)
+            ])
+        else:
+            pipeline = Pipeline([
+                ('scaler', StandardScaler()),
+                ('umap', self._algo)
+            ])
+
+        X_reduced = pipeline.fit_transform(X)
         return X_reduced
