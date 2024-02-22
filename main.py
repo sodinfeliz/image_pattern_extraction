@@ -117,10 +117,12 @@ class MainProcess:
         """ Prompts the user for the next action after a step is completed. """
         print(f"\n[bold dodger_blue1]{step_desc.capitalize()}[/bold dodger_blue1] step completed. ", end="")
         print("What would you like to do next?")
-        return select_prompt(
-            "Select the next action:",
-            choices=['Next', 'Repeat', 'Back', 'Exit']
-        )
+
+        choices = ['Next', 'Repeat', 'Exit']
+        if step_desc != "input":
+            choices.insert(2, 'Back')
+
+        return select_prompt("Select the next action:", choices=choices)
 
     def _hline(self, text: str):
         """ Print a horizontal line with the given text."""
