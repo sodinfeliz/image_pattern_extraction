@@ -79,7 +79,11 @@ class FeatureExtractor:
                 features = np.concatenate((features, out))
                 progress.update(task_id, advance=1)
 
-        return features, dataset.get_all_imgs()
+        # Standardize the features
+        features = features.T
+        features = (features - features.mean(axis=0)) / features.std(axis=0)
+
+        return features.T, dataset.get_all_imgs()
     
     @classmethod
     def prompt(cls):
