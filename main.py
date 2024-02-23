@@ -96,7 +96,7 @@ class MainProcess:
                 self._proceed()
             except TypeError:
                 self.stop_process = True
-                logging.exception("Undefined step.")
+                logger.exception("Undefined step.")
         else:
             text = " Process stopped " if self.stop_process else " Process completed "
             self._hline(text)
@@ -120,7 +120,7 @@ class MainProcess:
             case "Repeat":
                 pass
             case _:
-                logging.exception("Undefined response.")
+                logger.exception("Undefined response.")
                 self.stop_process = True
 
     def _prompt_next_action(self, step_desc: str):
