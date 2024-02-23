@@ -106,12 +106,18 @@ class MainProcess:
         else:
             response = self._prompt_next_action(step_desc)
 
-        if response == "Next":
-            self.step += 1
-        elif response == "Back":
-            self.step = max(self.step-1, 1)
-        elif response == "Exit":
-            self.stop_process = True
+        match response:
+            case "Next":
+                self.step += 1
+            case "Back":
+                self.step = max(self.step-1, 1)
+            case "Exit":
+                self.stop_process = True
+            case "Repeat":
+                pass
+            case _:
+                logging.exception("Undefined response.")
+                self.stop_process = True
 
     def _prompt_next_action(self, step_desc: str):
         """ Prompts the user for the next action after a step is completed. """
