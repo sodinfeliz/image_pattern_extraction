@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import questionary
 from prompt_toolkit.shortcuts import CompleteStyle
@@ -42,9 +42,9 @@ def text_prompt(message: str, validate=None, default=""):
     ).ask()
 
 
-def input_prompt(data_dir: str) -> str:
-    def check_dir_exists(path: str):
-        return os.path.exists(os.path.join(data_dir, path))
+def input_prompt(data_dir: Path) -> str:
+    def check_dir_exists(dirname: str):
+        return (data_dir / dirname).exists()
 
     return questionary.path(
         "Input directory:",

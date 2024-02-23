@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -130,8 +130,8 @@ class DrawResult():
         df_rank: pd.DataFrame,
         *,
         image_names: list,
-        src_path: str,
-        dst_path: str,
+        src_path: Path,
+        dst_path: Path,
         summary_count: int=5,
     ):
         """ 
@@ -141,8 +141,8 @@ class DrawResult():
         Args:
             df_rank (pd.DataFrame): rank of the top n images
             image_names (list): list of image names
-            src_path (str): source path of the images
-            dst_path (str): destination path of the output image
+            src_path (Path): source path of the images
+            dst_path (Path): destination path of the output image
         """
         r, c = len(df_rank), len(df_rank.columns)
         c = min(c, summary_count)
@@ -154,8 +154,8 @@ class DrawResult():
                 if np.isnan(index):
                     im = np.empty((0,0))
                 else:
-                    im_path = os.path.join(src_path, image_names[int(index)])
-                    im = load_image_to_fixed_width(im_path)[..., ::-1]
+                    im_path = src_path / image_names[int(index)]
+                    im = load_image_to_fixed_width(str(im_path))[..., ::-1]
                 fig_im.add_trace(
                     go.Image(z=im),
                     row=i+1, col=j+1
@@ -174,4 +174,4 @@ class DrawResult():
 
         fig_im.update_xaxes(showticklabels=False)
         fig_im.update_yaxes(showticklabels=False)
-        fig_im.write_image(os.path.join(dst_path, f'top_{c}_samples.png'))
+        fig_im.write_image(dst_path / f'top_{c}_samples.png')

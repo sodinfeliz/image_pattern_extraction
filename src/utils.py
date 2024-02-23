@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+from pathlib import Path
 
 
 def open_directory(path: str) -> None:
@@ -13,12 +14,10 @@ def open_directory(path: str) -> None:
             subprocess.run(['xdg-open', path])
         case platform_name:
             raise Exception(f'Unsupported platform: {platform_name}.')
-        
 
-def list_all_directories(path: str):
-    dirs = []
-    for entry in os.listdir(path):
-        rel_path = os.path.join(path, entry)
-        if os.path.isdir(rel_path):
-            dirs.append(entry)
-    return dirs
+
+def first_subdirectory(path: Path) -> str | None:
+    for item in path.iterdir():
+        if item.is_dir():
+            return item.name
+    return None

@@ -20,7 +20,7 @@ from src import (
 )
 from src.utils import (
     open_directory,
-    list_all_directories
+    first_subdirectory,
 )
 from src.prompt import (
     input_prompt,
@@ -54,8 +54,8 @@ class MainProcess:
     }
 
     def __init__(self, config_path: str):
-        self.config_path = config_path
-        self.step_methods = {
+        self.config_path: Path = Path(config_path)
+        self.step_methods: dict = {
             "input": self.input_step,
             "extraction": self.extraction_step,
             "reduction": self.reduction_step,
@@ -63,8 +63,8 @@ class MainProcess:
             "output": self.output_step
         }
         self.extractor = None
-        self.step = 1
-        self.stop_process = False
+        self.step: int = 1
+        self.stop_process: bool = False
         self._load_configs()
 
     def _load_configs(self):
@@ -72,8 +72,8 @@ class MainProcess:
         try:
             with open(self.config_path, 'r') as file:
                 self.configs = yaml.safe_load(file)
-            self.data_dir = self.configs['global_settings']['data_dir']
-            self.result_dir = self.configs['global_settings']['result_dir']
+            self.data_dir = Path(self.configs['global_settings']['data_dir'])
+            self.result_dir = Path(self.configs['global_settings']['result_dir'])
         except FileNotFoundError:
             logger.exception(f"Can't find the configuration file: {self.config_path}")
             sys.exit(1)
@@ -140,21 +140,20 @@ class MainProcess:
 
     def input_step(self):
         """ Input step: Select the data directory. """
-        if len(list_all_directories(self.data_dir)) == 0:
-            logging.exception("There's no available image data.")
+        if (first_dirname := first_subdirectory(self.data_dir)) is None:
+            logger.exception("There's no available image data.")
             sys.exit(1)
         
         self.dirname = input_prompt(data_dir=self.data_dir)
         if not self.dirname:
-            self.dirname = list_all_directories(self.data_dir)[0]
+            self.dirname = first_dirname
 
-        self.src_path = os.path.join(self.data_dir, self.dirname)
+        self.src_path = self.data_dir / self.dirname
         print(f"Input data path: {self.src_path}")
 
-        self.dst_path = os.path.join(self.result_dir, self.dirname)
-        if os.path.exists(self.dst_path):
-            shutil.rmtree(self.dst_path)
-        os.mkdir(self.dst_path)
+        self.dst_path = self.result_dir / self.dirname
+        shutil.rmtree(self.dst_path, ignore_errors=True)
+        self.dst_path.mkdir(parents=True)
         
     def extraction_step(self):
         """ Extraction step: Extract features from the input images. """
@@ -248,23 +247,23 @@ class MainProcess:
         with Progress() as progress:
             task_id: TaskID = progress.add_task("[cyan]Copying images: ", total=r*c)
             for i in range(r):
-                cluster_dir = os.path.join(self.dst_path, f"cluster_{i+1}")
+                cluster_dir = self.dst_path / f"cluster_{i+1}"
                 os.mkdir(cluster_dir)
                 for j in range(c):
                     image_name = self.image_names[df_rank.iloc[i, j]]
-                    src = os.path.join(self.src_path, image_name)
-                    dst = os.path.join(cluster_dir, image_name)
+                    src = self.src_path / image_name
+                    dst = cluster_dir / image_name
                     shutil.copy(src, dst)
                     progress.update(task_id, advance=1)
 
         # copy outliers to the outlier directory
         if self.df_outlier is not None:
-            outlier_dir = os.path.join(self.dst_path, "outliers")
-            os.mkdir(outlier_dir)
+            outlier_dir = self.dst_path / "outliers"
+            outlier_dir.mkdir()
             for i in range(len(self.df_outlier)):
                 image_name = self.image_names[self.df_outlier.index[i]]
-                src = os.path.join(self.src_path, image_name)
-                dst = os.path.join(outlier_dir, image_name)
+                src = self.src_path / image_name
+                dst = outlier_dir / image_name
                 shutil.copy(src, dst)
 
         # override user configuration file

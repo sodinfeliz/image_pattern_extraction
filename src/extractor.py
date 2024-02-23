@@ -1,5 +1,6 @@
 import sys
 import logging
+from pathlib import Path
 
 import torch
 import numpy as np
@@ -40,7 +41,7 @@ class FeatureExtractor:
             logger.exception(f"Invalid Backbone '{backbone}'.")
             sys.exit(1)
 
-    def _set_dataset(self, path) -> CustomImageDataset:
+    def _set_dataset(self, path: Path) -> CustomImageDataset:
         return CustomImageDataset(
             main_dir=path,
             input_sz=self.configs['backbone'][self.model.backbone]['input'],
@@ -48,7 +49,7 @@ class FeatureExtractor:
             blur_sigma=self.configs['dataset']['blur_sigma']
         )
 
-    def extract(self, path: str):
+    def extract(self, path: Path):
         """
         Extract the image features.
 

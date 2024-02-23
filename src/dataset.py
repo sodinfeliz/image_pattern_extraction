@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from torchvision import transforms
 from torch.utils.data import Dataset
@@ -9,7 +10,7 @@ class CustomImageDataset(Dataset):
     def __init__(
         self,
         *,
-        main_dir: str,
+        main_dir: Path,
         input_sz: int,
         blur_kernel: int,
         blur_sigma: int,
@@ -27,7 +28,7 @@ class CustomImageDataset(Dataset):
         return len(self.all_imgs)
 
     def __getitem__(self, idx):
-        img_loc = os.path.join(self.main_dir, self.all_imgs[idx])
+        img_loc = self.main_dir / self.all_imgs[idx]
         image = Image.open(img_loc).convert("RGB")
         if self.transform is not None:
             tensor_image = self.transform(image)
