@@ -5,7 +5,7 @@ import shutil
 import argparse
 import logging
 import logging.config
-import pathlib
+from pathlib import Path
 
 import yaml
 import pandas as pd
@@ -33,9 +33,13 @@ logger = logging.getLogger(__name__)
 
 def setup_logging():
     """ Set up the logging configuration. """
-    logging_config_file = pathlib.Path("configs/logging.json")
-    with open(logging_config_file) as f_in:
-        logging_config = json.load(f_in)
+    logging_config_file = Path("configs/logging.json")
+    try:
+        with open(logging_config_file) as f_in:
+            logging_config = json.load(f_in)
+    except FileNotFoundError:
+        logging.exception(f"Can't find the logging configuration file: {logging_config_file}")
+        sys.exit(1)
     logging.config.dictConfig(logging_config)
     
 
