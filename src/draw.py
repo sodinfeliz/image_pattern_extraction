@@ -141,6 +141,7 @@ class DrawResult():
             df_rank (pd.DataFrame): rank of the top n images
             image_paths (list[Path]): list of image paths
             dst_path (Path): destination path of the output image
+            summary_count (int): number of images to be shown
         """
         r, c = len(df_rank), len(df_rank.columns)
         c = min(c, summary_count)
