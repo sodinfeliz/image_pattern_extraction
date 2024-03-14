@@ -129,8 +129,7 @@ class DrawResult():
         cls,
         df_rank: pd.DataFrame,
         *,
-        image_names: list,
-        src_path: Path,
+        image_paths: list[Path],
         dst_path: Path,
         summary_count: int=5,
     ):
@@ -140,8 +139,7 @@ class DrawResult():
         
         Args:
             df_rank (pd.DataFrame): rank of the top n images
-            image_names (list): list of image names
-            src_path (Path): source path of the images
+            image_paths (list[Path]): list of image paths
             dst_path (Path): destination path of the output image
         """
         r, c = len(df_rank), len(df_rank.columns)
@@ -154,7 +152,7 @@ class DrawResult():
                 if np.isnan(index):
                     im = np.empty((0,0))
                 else:
-                    im_path = src_path / image_names[int(index)]
+                    im_path = image_paths[int(index)]
                     im = load_image_to_fixed_width(str(im_path))[..., ::-1]
                 fig_im.add_trace(
                     go.Image(z=im),

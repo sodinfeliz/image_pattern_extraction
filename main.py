@@ -164,7 +164,7 @@ class MainProcess:
                 backbone=self.backbone)
         else:
             self.extractor.set_model(self.backbone)
-        self.X, self.image_names = self.extractor.extract(path=self.src_path)
+        self.X, self.image_paths = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):
         """ Reduction step: Reduce the dimensionality of the extracted features. """
@@ -237,8 +237,7 @@ class MainProcess:
         # draw top n images
         DrawResult.draw_top_n_output(
             df_rank, 
-            image_names=self.image_names, 
-            src_path=self.src_path, 
+            image_paths=self.image_paths, 
             dst_path=self.dst_path
         )
 
@@ -250,9 +249,8 @@ class MainProcess:
                 cluster_dir = self.dst_path / f"cluster_{i+1}"
                 os.mkdir(cluster_dir)
                 for j in range(c):
-                    image_name = self.image_names[df_rank.iloc[i, j]]
-                    src = self.src_path / image_name
-                    dst = cluster_dir / image_name
+                    src = self.image_paths[df_rank.iloc[i, j]]
+                    dst = cluster_dir / src.name
                     shutil.copy(src, dst)
                     progress.update(task_id, advance=1)
 
@@ -261,9 +259,8 @@ class MainProcess:
             outlier_dir = self.dst_path / "outliers"
             outlier_dir.mkdir()
             for i in range(len(self.df_outlier)):
-                image_name = self.image_names[self.df_outlier.index[i]]
-                src = self.src_path / image_name
-                dst = outlier_dir / image_name
+                src = self.image_paths[self.df_outlier.index[i]]
+                dst = outlier_dir / src.name
                 shutil.copy(src, dst)
 
         # override user configuration file

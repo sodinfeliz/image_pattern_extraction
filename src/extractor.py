@@ -80,7 +80,7 @@ class FeatureExtractor:
                 features = np.concatenate((features, out))
                 progress.update(task_id, advance=1)
 
-        return features, dataset.get_all_imgs()
+        return features, dataset.get_img_paths()
     
     @classmethod
     def prompt(cls):

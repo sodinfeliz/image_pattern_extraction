@@ -22,17 +22,16 @@ class CustomImageDataset(Dataset):
             transforms.ToTensor(),
             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ])
-        self.all_imgs = os.listdir(main_dir)
+        self.img_paths = list(main_dir.glob("**/*.jpg"))
 
     def __len__(self):
-        return len(self.all_imgs)
+        return len(self.img_paths)
 
     def __getitem__(self, idx):
-        img_loc = self.main_dir / self.all_imgs[idx]
-        image = Image.open(img_loc).convert("RGB")
+        image = Image.open(self.img_paths[idx]).convert("RGB")
         if self.transform is not None:
             tensor_image = self.transform(image)
         return tensor_image
     
-    def get_all_imgs(self) -> list[str]:
-        return self.all_imgs
+    def get_img_paths(self) -> list[str]:
+        return self.img_paths
