@@ -7,13 +7,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def load_image_to_fixed_width(path: str, width: int=256):
-    im = cv2.imread(path)
-    ratio = width / im.shape[1]
-    resized_im = cv2.resize(im, (width, int(ratio * im.shape[0])))
-    return resized_im
-
-
 class DrawResult():
     
     PLOTLY_THEME: str = "plotly_dark"
@@ -154,7 +147,7 @@ class DrawResult():
                     im = np.empty((0,0))
                 else:
                     im_path = image_paths[int(index)]
-                    im = load_image_to_fixed_width(str(im_path))[..., ::-1]
+                    im = cls.load_image_to_fixed_width(str(im_path))[..., ::-1]
                 fig_im.add_trace(
                     go.Image(z=im),
                     row=i+1, col=j+1
@@ -174,3 +167,15 @@ class DrawResult():
         fig_im.update_xaxes(showticklabels=False)
         fig_im.update_yaxes(showticklabels=False)
         fig_im.write_image(dst_path / f'top_{c}_samples.png')
+
+    
+    @staticmethod
+    def load_image_to_fixed_width(
+        path: str, 
+        maximum_width: int=256
+    ):
+        im = cv2.imread(path)
+        if im.shape[1] > maximum_width:
+            ratio = maximum_width / im.shape[1]
+            im = cv2.resize(im, (maximum_width, int(ratio * im.shape[0])))
+        return im
