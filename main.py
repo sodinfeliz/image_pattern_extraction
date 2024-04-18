@@ -1,4 +1,3 @@
-import os
 import sys
 import json
 import shutil
@@ -62,7 +61,7 @@ class MainProcess:
             "clustering": self.clustering_step,
             "output": self.output_step
         }
-        self.extractor = None
+        self.extractor: FeatureExtractor = None
         self.step: int = 1
         self.stop_process: bool = False
         self._load_configs()
@@ -123,7 +122,7 @@ class MainProcess:
                 logger.exception("Undefined response.")
                 self.stop_process = True
 
-    def _prompt_next_action(self, step_desc: str):
+    def _prompt_next_action(self, step_desc: str) -> str:
         """ Prompts the user for the next action after a step is completed. """
         print(f"\n[bold dodger_blue1]{step_desc.capitalize()}[/bold dodger_blue1] step completed. ", end="")
         print("What would you like to do next?")
@@ -134,7 +133,7 @@ class MainProcess:
 
         return select_prompt("Select the next action:", choices=choices)
 
-    def _hline(self, text: str):
+    def _hline(self, text: str) -> None:
         """ Print a horizontal line with the given text."""
         print(f"\n{text:=^80}\n")
 
@@ -180,9 +179,10 @@ class MainProcess:
 
         self.df = pd.DataFrame(self.X_reduced)
         self.df.columns = ['x', 'y']
+
         DrawResult.draw_reduction(
-            self.df, 
-            reduction_method=self.reduction_method)
+            self.df, reduction_method=self.reduction_method
+        )
 
     def clustering_step(self):
         """ Clustering step: Cluster the reduced features. """
@@ -199,6 +199,8 @@ class MainProcess:
         self.df_mean = self.df.groupby('cluster').mean()
         self.df_mean.columns = ['mean_x', 'mean_y']
 
+        # Separate the outliers from the clusters if DBSCAN is used
+        # DBSCAN assigns outliers to cluster -1
         self.df_outlier = None
         if self.cluster_method == 'DBSCAN' and -1 in self.df_mean.index:
             self.df_outlier = self.df[self.df['cluster'] == -1]
@@ -206,9 +208,10 @@ class MainProcess:
             self.df_mean.drop(-1, inplace=True)
         else:
             self.df_filter = self.df.copy()
+
         if self.df_outlier is not None:
             print("Outliers count: ", len(self.df_outlier))
-            
+
         print("Clustering mean: ")
         print(self.df_mean)
 
@@ -224,9 +227,12 @@ class MainProcess:
         self.df_merge = pd.merge(self.df_filter, self.df_mean, how='inner', on='cluster')
         self.df_merge['dist_square'] = (self.df_merge['x'] - self.df_merge['mean_x'])**2 + \
                                        (self.df_merge['y'] - self.df_merge['mean_y'])**2
+        
+        # Assign the original index to the merged dataframe
         self.df_merge.index = self.df_filter.index
 
-        n_smallest = output_prompt(int(self.df_merge.groupby('cluster')['x'].count().min()))
+        smallest_cluster = int(self.df_merge.groupby('cluster')['x'].count().min())
+        n_smallest = output_prompt(smallest_cluster)
 
         df_rank = self.df_merge.reset_index().rename(columns={'index': 'original_index'})
         df_rank = df_rank.sort_values(['cluster', 'dist_square'])
@@ -242,13 +248,18 @@ class MainProcess:
         )
 
         # copy images to the cluster directory
-        r, c = len(df_rank), len(df_rank.columns)
+        cluster_num = len(df_rank)
+        points_per_cluster = len(df_rank.columns)
+
         with Progress() as progress:
-            task_id: TaskID = progress.add_task("[cyan]Copying images: ", total=r*c)
-            for i in range(r):
-                cluster_dir = self.dst_path / f"cluster_{i+1}"
-                os.mkdir(cluster_dir)
-                for j in range(c):
+            task_id: TaskID = progress.add_task(
+                description="[cyan]Copying images: ", 
+                total=cluster_num*points_per_cluster
+            )
+            for i in range(cluster_num):
+                cluster_dir = self.dst_path / f"cluster_{i}"
+                cluster_dir.mkdir()
+                for j in range(points_per_cluster):
                     src = self.image_paths[df_rank.iloc[i, j]]
                     dst = cluster_dir / src.name
                     shutil.copy(src, dst)
@@ -266,6 +277,11 @@ class MainProcess:
         # override user configuration file
         with open(self.config_path, 'w') as file:
             yaml.safe_dump(self.configs, file, sort_keys=False)
+
+        # output the final result
+        df_final = self.df.copy()
+        df_final['image_path'] = self.image_paths
+        df_final.to_csv(self.dst_path / "result.csv", index=False)
 
         open_directory(self.dst_path)
 

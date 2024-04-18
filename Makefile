@@ -1,4 +1,4 @@
-VENV             := env
+VENV             := venv
 PYTHON           := $(VENV)/bin/python3
 PIP              := $(VENV)/bin/pip
 CONFIG_FILE_NAME := user-config
