@@ -1,5 +1,6 @@
 import subprocess
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -21,3 +22,10 @@ def first_subdirectory(path: Path) -> str | None:
         if item.is_dir():
             return item.name
     return None
+
+
+def recreate_directory(path: Path) -> Path:
+    shutil.rmtree(path, ignore_errors=True)
+    path.mkdir(parents=True)
+    return path
+

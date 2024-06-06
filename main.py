@@ -20,6 +20,7 @@ from src import (
 from src.utils import (
     open_directory,
     first_subdirectory,
+    recreate_directory,
 )
 from src.prompt import (
     input_prompt,
@@ -254,7 +255,7 @@ class MainProcess:
         with Progress() as progress:
             task_id: TaskID = progress.add_task(
                 description="[cyan]Copying images: ", 
-                total=cluster_num*points_per_cluster
+                total=cluster_num * points_per_cluster
             )
             for i in range(cluster_num):
                 cluster_dir = self.dst_path / f"cluster_{i}"
