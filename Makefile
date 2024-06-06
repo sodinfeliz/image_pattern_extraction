@@ -10,11 +10,11 @@ $(VENV)/bin/activate: requirements.txt
 
 build: $(VENV)/bin/activate
 
-configs/$(CONFIG_FILE_NAME).yaml: ./configs/config.yaml
-	@cp ./configs/config.yaml ./configs/$(CONFIG_FILE_NAME).yaml
+configs/$(CONFIG_FILE_NAME).toml: ./configs/config.toml
+	@cp ./configs/config.toml ./configs/$(CONFIG_FILE_NAME).toml
 
-run: configs/$(CONFIG_FILE_NAME).yaml build
-	@$(PYTHON) main.py --config ./configs/$(CONFIG_FILE_NAME).yaml
+run: configs/$(CONFIG_FILE_NAME).toml build
+	@$(PYTHON) main.py --config ./configs/$(CONFIG_FILE_NAME).toml
 
 clean:
 	rm -rf $(VENV)

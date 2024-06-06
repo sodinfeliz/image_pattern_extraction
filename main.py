@@ -6,8 +6,8 @@ import logging
 import logging.config
 from pathlib import Path
 
-import yaml
 import pandas as pd
+import toml
 from rich import print
 from rich.progress import Progress, TaskID 
 
@@ -70,7 +70,7 @@ class MainProcess:
         """ Set the configurations from the user configuration file """
         try:
             with open(self.config_path, 'r') as file:
-                self.configs = yaml.safe_load(file)
+                self.configs = toml.load(file)
             self.data_dir = Path(self.configs['global_settings']['data_dir'])
             self.result_dir = Path(self.configs['global_settings']['result_dir'])
         except FileNotFoundError:
@@ -276,7 +276,7 @@ class MainProcess:
 
         # override user configuration file
         with open(self.config_path, 'w') as file:
-            yaml.safe_dump(self.configs, file, sort_keys=False)
+            toml.dump(self.configs, file)
 
         # output the final result
         df_final = self.df.copy()
@@ -288,7 +288,7 @@ class MainProcess:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='./configs/user-config.yaml',
+    parser.add_argument('-c', '--config', type=str, default='./configs/config.toml',
                         help='Path to the configuration file')
     args = parser.parse_args()
     
