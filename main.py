@@ -162,7 +162,7 @@ class MainProcess:
                 configs=self.configs['extractor'],
                 backbone=self.backbone)
         else:
-            self.extractor.set_model(self.backbone)
+            self.extractor.set_encoder(self.backbone)
         self.X, self.image_paths = self.extractor.extract(path=self.src_path)
 
     def reduction_step(self):

@@ -7,7 +7,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 from rich.progress import Progress, TaskID
 
-from .model import Model
+from .encoder import Encoder
 from .dataset import CustomImageDataset
 from .prompt import select_prompt
 
@@ -16,17 +16,12 @@ logger = logging.getLogger(__name__)
 
 class FeatureExtractor:
 
-    _AVAILABLE_MODELS = [
-        "ResNet",
-        "EfficientNet"
-    ]
-
     def __init__(self, configs: dict, backbone: str='') -> None:
         self.configs: dict = configs
-        self.model: Model = None
-        self.set_model(backbone)
+        self.model: Encoder = None
+        self.set_encoder(backbone)
 
-    def set_model(self, backbone: str) -> None:
+    def set_encoder(self, backbone: str) -> None:
         """ 
         Set the backbone for the model,
         only "EfficientNet", and "ResNet" available.
@@ -34,11 +29,11 @@ class FeatureExtractor:
         Args:
             backbone (str): backbone of model
         """
-        if backbone in self._AVAILABLE_MODELS:
-            self.model = Model(backbone) if backbone else Model()
+        try:
+            self.model = Encoder(backbone) if backbone else Encoder()
             self.model.start_eval()
-        else:
-            logger.exception(f"Invalid Backbone '{backbone}'.")
+        except Exception as e:
+            logger.exception(f"Error occurred while setting the model: {backbone=}, {e}")
             sys.exit(1)
 
     def _set_dataset(self, path: Path) -> CustomImageDataset:
@@ -84,9 +79,10 @@ class FeatureExtractor:
     
     @classmethod
     def prompt(cls):
+        """Prompt for selecting the backbone of the encoder."""
         return select_prompt(
-            "Select the backbone of the extraction model:",
-            choices=cls._AVAILABLE_MODELS
+            "Select the backbone of the encoder:",
+            choices=Encoder._AVAILABLE_BACKBONES
         )
 
 

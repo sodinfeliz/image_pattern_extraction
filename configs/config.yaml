@@ -10,6 +10,9 @@ extractor:
     EfficientNet:
       input: 256
       output: 1000
+    MobileNetV3:
+      input: 224
+      output: 1000
   dataset:
     blur_kernel: 7
     blur_sigma: 3
