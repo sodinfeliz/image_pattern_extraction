@@ -1,12 +1,13 @@
-VENV             := venv
-PYTHON           := $(VENV)/bin/python3
+VENV             := venv-3.8
+PYTHON           := $(VENV)/bin/python3.8
 PIP              := $(VENV)/bin/pip
 CONFIG_FILE_NAME := user-config
 
 $(VENV)/bin/activate: requirements.txt
-	python3 -m venv $(VENV)
+	$(PYTHON) -m venv $(VENV)
 	$(PYTHON) -m pip install --upgrade pip
-	$(PIP) install -r requirements.txt torch torchvision torchaudio
+	$(PIP) install -r requirements.txt
+	$(PIP) install torch torchvision torchaudio
 
 build: $(VENV)/bin/activate
 

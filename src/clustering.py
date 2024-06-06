@@ -1,5 +1,5 @@
-import sys
 import logging
+import sys
 
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
@@ -21,7 +21,7 @@ class ClusterAlgo(GeneralAlgo):
         self.labels: np.ndarray = None
 
     def apply(self, X_reduced) -> np.ndarray:
-        """ 
+        """
         Apply the clustering algorithm to the reduced features.
 
         Args:

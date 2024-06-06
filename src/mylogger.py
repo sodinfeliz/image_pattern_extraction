@@ -1,6 +1,7 @@
 import datetime as dt
-import logging
 import json
+import logging
+from typing import Dict, Optional
 
 LOG_RECORD_BUILTIN_ATTRS = {
     "args",
@@ -33,7 +34,7 @@ class CustomJSONFormatter(logging.Formatter):
     def __init__(
         self,
         *,
-        fmt_keys: dict[str, str] | None = None,
+        fmt_keys: Optional[Dict[str, str]] = None,
     ):
         super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
@@ -42,7 +43,7 @@ class CustomJSONFormatter(logging.Formatter):
         message = self._prepare_log_dict(record)
         return json.dumps(message, default=str)
 
-    def _prepare_log_dict(self, record: logging.LogRecord) -> dict:
+    def _prepare_log_dict(self, record: logging.LogRecord) -> Dict:
         always_field = {
             "message": record.getMessage(),
             "timestamp": dt.datetime.fromtimestamp(
@@ -56,9 +57,11 @@ class CustomJSONFormatter(logging.Formatter):
             always_field["stack_info"] = self.formatStack(record.stack_info)
 
         message = {
-            key: msg_val
-            if (msg_val := always_field.pop(val, None)) is not None
-            else getattr(record, val)
+            key: (
+                msg_val
+                if (msg_val := always_field.pop(val, None)) is not None
+                else getattr(record, val)
+            )
             for key, val in self.fmt_keys.items()
         }
         message.update(always_field)
@@ -68,13 +71,3 @@ class CustomJSONFormatter(logging.Formatter):
                 message[key] = val
 
         return message
-
-
-
-
-
-
-
-
-
-
