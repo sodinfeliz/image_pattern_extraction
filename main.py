@@ -1,4 +1,5 @@
 import argparse
+import copy
 import json
 import logging
 import logging.config
@@ -56,11 +57,16 @@ class MainProcess:
         self.stop_process: bool = False
         self._load_configs()
 
+    #############################
+    # Configuration related
+    #############################
+
     def _load_configs(self):
         """Set the configurations from the user configuration file"""
         try:
             with open(self.config_path, "r") as file:
-                self.configs = toml.load(file)
+                self.original_configs = toml.load(file)  # for rollback
+                self.configs = copy.deepcopy(self.original_configs)
             self.data_dir = Path(self.configs["global_settings"]["data_dir"])
             self.result_dir = Path(self.configs["global_settings"]["result_dir"])
         except FileNotFoundError:
@@ -76,21 +82,54 @@ class MainProcess:
         self._hline(" Load configurations ")
         print("Configuration file: ", self.config_path)
 
+    def _update_configs(self):
+        """Update the user configurations from the current settings."""
+        try:
+            with open(self.config_path, "w") as file:
+                toml.dump(self.configs, file)
+        except FileNotFoundError:
+            logger.exception(f"Can't find the configuration file: {self.config_path}")
+            self._rollback_configs()
+        except Exception as e:
+            logger.exception(f"Error updating the configuration file: {e}")
+            self._rollback_configs()
+
+    def _rollback_configs(self):
+        """Rollback the user configurations to the previous settings."""
+        try:
+            with open(self.config_path, "w") as file:
+                toml.dump(self.original_configs, file)
+        except Exception as e:
+            logger.exception(f"Error when rolling back the configuration file: {e}")
+        finally:
+            sys.exit(1)
+
+    #############################
+    # Main process related
+    #############################
+
     def start(self):
         """Start the main process loop."""
-        while not self.stop_process and self.step <= len(self._STEP_DESC):
-            step_desc = self._STEP_DESC[self.step]
-            method = self.step_methods.get(step_desc)
-            try:
-                self._hline(f" Step {self.step}: {step_desc.capitalize()} ")
-                method()
-                self._proceed()
-            except TypeError:
-                self.stop_process = True
-                logger.exception("Undefined step.")
-        else:
-            text = " Process stopped " if self.stop_process else " Process completed "
-            self._hline(text)
+        try:
+            while not self.stop_process and self.step <= len(self._STEP_DESC):
+                step_desc = self._STEP_DESC[self.step]
+                method = self.step_methods.get(step_desc)
+                try:
+                    self._hline(f" Step {self.step}: {step_desc.capitalize()} ")
+                    method()
+                    self._proceed()
+                except TypeError:
+                    self.stop_process = True
+                    logger.exception("Undefined step.")
+            else:
+                if self.stop_process:
+                    self._hline(" Process stopped ")
+                    self._rollback_configs()
+                else:
+                    self._hline(" Process completed ")
+        except Exception as e:
+            logger.exception(f"Error: {e}")
+            self._rollback_configs()
 
     def _proceed(self):
         """Handles the navigation between steps."""
@@ -165,6 +204,8 @@ class MainProcess:
             message="Select the dimensionality reduction algorithm:",
             configs=self.configs["reduction"],
         )
+        self._update_configs()
+
         print("\nStart reducing dimensionality ... ", end="")
         self.reducer = ReduceAlgo().set_algo(
             method=self.reduction_method, configs=self.configs["reduction"]
@@ -183,6 +224,8 @@ class MainProcess:
             message="Select the clustering algorithm:",
             configs=self.configs["clustering"],
         )
+        self._update_configs()
+
         print("\nStart clustering ... ", end="")
         self.cluster_algo = ClusterAlgo().set_algo(
             method=self.cluster_method, configs=self.configs["clustering"]
@@ -292,7 +335,7 @@ if __name__ == "__main__":
         "-c",
         "--config",
         type=str,
-        default="./configs/config.toml",
+        default="./configs/user-config.toml",
         help="Path to the configuration file",
     )
     args = parser.parse_args()

@@ -44,7 +44,7 @@ class GeneralAlgo:
 
     @classmethod
     def prompt(cls, message: str, configs: dict):
-        method = select_prompt(message, choices=list(cls._AVAILABLE_ALGO.keys()))
+        method: str = select_prompt(message, choices=list(cls._AVAILABLE_ALGO.keys()))
 
         algo_instance = cls._AVAILABLE_ALGO[method]()
         algo_configs = algo_instance.get_params()
