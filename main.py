@@ -90,9 +90,11 @@ class MainProcess:
         except FileNotFoundError:
             logger.exception(f"Can't find the configuration file: {self.config_path}")
             self._rollback_configs()
+            sys.exit(1)
         except Exception as e:
             logger.exception(f"Error updating the configuration file: {e}")
             self._rollback_configs()
+            sys.exit(1)
 
     def _rollback_configs(self):
         """Rollback the user configurations to the previous settings."""
@@ -101,7 +103,6 @@ class MainProcess:
                 toml.dump(self.original_configs, file)
         except Exception as e:
             logger.exception(f"Error when rolling back the configuration file: {e}")
-        finally:
             sys.exit(1)
 
     #############################
@@ -133,6 +134,9 @@ class MainProcess:
 
     def _proceed(self):
         """Handles the navigation between steps."""
+        if self.stop_process:
+            return
+
         step_desc = self._STEP_DESC[self.step]
 
         if step_desc in ["extraction", "output"]:  # Skip the prompt for these steps
@@ -176,7 +180,14 @@ class MainProcess:
             logger.exception("There's no available image data.")
             sys.exit(1)
 
-        self.dirname = input_prompt(data_dir=self.data_dir)
+        self.dirname = input_prompt(
+            data_dir=self.data_dir,
+            exit_keys=self.configs["global_settings"]["exit_keys"],
+        )
+        if self.dirname in self.configs["global_settings"]["exit_keys"]:
+            self.stop_process = True
+            return
+
         if not self.dirname:
             self.dirname = first_dirname
 

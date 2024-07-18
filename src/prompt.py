@@ -39,9 +39,9 @@ def text_prompt(message: str, validate=None, default=""):
     ).ask()
 
 
-def input_prompt(data_dir: Path) -> str:
+def input_prompt(data_dir: Path, exit_keys: list) -> str:
     def check_dir_exists(dirname: str):
-        return (data_dir / dirname).exists()
+        return (data_dir / dirname).exists() or dirname in exit_keys
 
     return questionary.path(
         "Input directory:",
