@@ -1,6 +1,6 @@
 import json
 
-from .prompt import autocomplete_prompt, confirm_prompt, select_prompt, text_prompt
+from ..prompt import autocomplete_prompt, confirm_prompt, select_prompt, text_prompt
 
 
 class GeneralAlgo:

@@ -7,9 +7,9 @@ import torch
 from rich.progress import Progress, TaskID
 from torch.utils.data import DataLoader
 
-from .dataset import CustomImageDataset
+from ..dataset import CustomImageDataset
+from ..prompt import select_prompt
 from .encoder import Encoder
-from .prompt import select_prompt
 
 logger = logging.getLogger(__name__)
 

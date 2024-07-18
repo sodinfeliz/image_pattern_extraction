@@ -12,9 +12,10 @@ import toml
 from rich import print
 from rich.progress import Progress, TaskID
 
-from src import ClusterAlgo, DrawResult, FeatureExtractor, ReduceAlgo
+from src import DrawResult
+from src.files import first_subdirectory, open_directory
+from src.ml_utils import ClusterAlgo, FeatureExtractor, ReduceAlgo
 from src.prompt import input_prompt, output_prompt, select_prompt
-from src.utils import first_subdirectory, open_directory, recreate_directory
 
 logger = logging.getLogger(__name__)
 
