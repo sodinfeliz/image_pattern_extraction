@@ -17,8 +17,8 @@ venv*/
 *env/
 
 # configuratin file
-*.toml
 !config.toml
+configs/*
 
 # testing files
 test.py
