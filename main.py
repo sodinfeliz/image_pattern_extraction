@@ -6,6 +6,7 @@ import logging.config
 import shutil
 import sys
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import toml
@@ -53,7 +54,7 @@ class MainProcess:
             "clustering": self.clustering_step,
             "output": self.output_step,
         }
-        self.extractor: FeatureExtractor = None
+        self.extractor: Optional[FeatureExtractor] = None
         self.step: int = 1
         self.stop_process: bool = False
         self._load_configs()
