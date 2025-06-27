@@ -1,8 +1,9 @@
-import sys
 import logging
+import sys
+from typing import Optional
 
 import numpy as np
-from sklearn.cluster import DBSCAN, KMeans
+from sklearn.cluster import DBSCAN, KMeans  # type: ignore
 
 from .general_algo import GeneralAlgo
 
@@ -18,10 +19,10 @@ class ClusterAlgo(GeneralAlgo):
 
     def __init__(self) -> None:
         super().__init__()
-        self.labels: np.ndarray = None
+        self.labels: Optional[np.ndarray] = None
 
     def apply(self, X_reduced) -> np.ndarray:
-        """ 
+        """
         Apply the clustering algorithm to the reduced features.
 
         Args:

@@ -1,6 +1,5 @@
 __pycache__/
 .DS_Store
-*env/
 data/*
 !data/.gitkeep
 results/*
@@ -12,9 +11,14 @@ results/*
 logs/*
 !logs/.gitkeep
 
+# virtual environment
+venv/
+venv*/
+*env/
+
 # configuratin file
-*.yaml
-!config.yaml
+!config.toml
+configs/*
 
 # testing files
 test.py

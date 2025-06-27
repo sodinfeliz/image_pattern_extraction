@@ -1,17 +1,13 @@
 import json
+from typing import Any
 
-from .prompt import (
-    text_prompt,
-    autocomplete_prompt,
-    confirm_prompt,
-    select_prompt
-)
+from ..prompt import autocomplete_prompt, confirm_prompt, select_prompt, text_prompt
 
 
 class GeneralAlgo:
 
-    _AVAILABLE_ALGO = {}
-    _ALGO_NAME = ''
+    _AVAILABLE_ALGO: dict[str, Any] = {}
+    _ALGO_NAME = ""
 
     def __init__(self) -> None:
         self._algo = None
@@ -21,11 +17,13 @@ class GeneralAlgo:
         if self._algo:
             return self._algo.__class__.__name__
         return None
-    
+
     def set_algo(self, method: str, configs: dict):
         if method not in self._AVAILABLE_ALGO:
-            raise ValueError(f"Unknown {self._ALGO_NAME} method: '{method}'. " +
-                             f"Available methods are: {list(self._AVAILABLE_ALGO.keys())}.")
+            raise ValueError(
+                f"Unknown {self._ALGO_NAME} method: '{method}'. "
+                + f"Available methods are: {list(self._AVAILABLE_ALGO.keys())}."
+            )
         algo_class = self._AVAILABLE_ALGO[method]
         self._algo = algo_class(**configs.get(method, {}))
         return self
@@ -47,7 +45,7 @@ class GeneralAlgo:
 
     @classmethod
     def prompt(cls, message: str, configs: dict):
-        method = select_prompt(message, choices=list(cls._AVAILABLE_ALGO.keys()))
+        method: str = select_prompt(message, choices=list(cls._AVAILABLE_ALGO.keys()))
 
         algo_instance = cls._AVAILABLE_ALGO[method]()
         algo_configs = algo_instance.get_params()
@@ -56,18 +54,22 @@ class GeneralAlgo:
         if confirm_prompt("Would you like to fine-tune the parameters?"):
             finished = False
             while not finished:
-                selected_param = autocomplete_prompt("Select the parameter:", choices=algo_configs.keys())
+                selected_param = autocomplete_prompt(
+                    "Select the parameter:", choices=algo_configs.keys()
+                )
                 cur_val = algo_configs[selected_param]
                 value_type = type(cur_val)
 
                 while True:
-                    user_input = text_prompt(f"Set '{selected_param}' [{value_type.__name__}: {cur_val}]:")
+                    user_input = text_prompt(
+                        f"Set '{selected_param}' [{value_type.__name__}: {cur_val}]:"
+                    )
                     try:
                         if user_input and user_input.lower() != "none":
                             algo_configs[selected_param] = value_type(user_input)
                         # Validate by setting params
                         algo_instance.set_params(**algo_configs)
-                        break # Exit the loop if successfully updated and validated
+                        break  # Exit the loop if successfully updated and validated
                     except (ValueError, TypeError) as e:
                         print(f"Error updating {selected_param}: {e}")
 
@@ -77,4 +79,3 @@ class GeneralAlgo:
             print("Skipping parameter tuning.")
 
         return method
-

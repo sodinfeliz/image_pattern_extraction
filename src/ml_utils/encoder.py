@@ -1,25 +1,23 @@
+from typing import Optional
+
 import torch
-from torchvision.models import (
-    resnet101, 
-    ResNet101_Weights, 
-    efficientnet_b0, 
+from torchvision.models import (  # type: ignore
     EfficientNet_B0_Weights,
-    mobilenet_v3_small,
     MobileNet_V3_Small_Weights,
+    ResNet101_Weights,
+    efficientnet_b0,
+    mobilenet_v3_small,
+    resnet101,
 )
 
 
-class Encoder():
+class Encoder:
 
-    _AVAILABLE_BACKBONES = [
-        "ResNet",
-        "EfficientNet",
-        "MobileNetV3"
-    ]
+    _AVAILABLE_BACKBONES = ["ResNet", "EfficientNet", "MobileNetV3"]
 
-    def __init__(self, backbone: str='ResNet') -> None:
-        self._backbone = ''
-        self._model = None
+    def __init__(self, backbone: str = "ResNet") -> None:
+        self._backbone = ""
+        self._model: Optional[torch.nn.Module] = None
         self._device = None
         self.set_backbone(backbone)
 
@@ -29,20 +27,24 @@ class Encoder():
     @property
     def backbone(self):
         return self._backbone
-    
+
     @backbone.setter
     def backbone(self, _):
-        raise AttributeError(f"Directly modification of backbone disabled, using 'set_backbone' instead.")
+        raise AttributeError(
+            "Directly modification of backbone disabled, using 'set_backbone' instead."
+        )
 
     def get_device(self):
         return self._device
 
     def set_backbone(self, backbone: str):
         if not isinstance(backbone, str):
-            raise TypeError(f"Type mismatched: Expected str but got {type(backbone).__name__}")
+            raise TypeError(
+                f"Type mismatched: Expected str but got {type(backbone).__name__}"
+            )
         if backbone not in self._AVAILABLE_BACKBONES:
             raise ValueError(f"Invalid Backbone '{backbone}'")
-        
+
         self._backbone = backbone
         try:
             if self._backbone == "ResNet":
@@ -50,20 +52,26 @@ class Encoder():
             elif self._backbone == "EfficientNet":
                 self._model = efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)
             elif self._backbone == "MobileNetV3":
-                self._model = mobilenet_v3_small(weights=MobileNet_V3_Small_Weights.DEFAULT)
+                self._model = mobilenet_v3_small(
+                    weights=MobileNet_V3_Small_Weights.DEFAULT
+                )
+
+            if self._model is None:
+                raise ValueError("Model setting failed. Please check the backbone.")
+
             self._model.fc = torch.nn.Identity()
         except Exception as e:
             raise e
 
         return self
-    
+
     def start_eval(self):
         if torch.cuda.is_available():
-            self._device = 'cuda'
+            self._device = "cuda"
         elif torch.backends.mps.is_available():
-            self._device = 'mps'
+            self._device = "mps"
         else:
-            self._device = 'cpu'
+            self._device = "cpu"
         self._model.to(self._device)
         self._model.eval()
 
