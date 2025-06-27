@@ -6,7 +6,7 @@ import logging.config
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 import toml
@@ -45,7 +45,7 @@ class MainProcess:
         5: "output",
     }
 
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: Union[str, Path]):
         self.config_path: Path = Path(config_path)
         self.step_methods: dict = {
             "input": self.input_step,
@@ -353,6 +353,14 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    config_path = Path(args.config)
+    if not config_path.exists():
+        # copy the default configuration file
+        shutil.copy(
+            Path(__file__).parent / "configs" / "config.toml",
+            config_path,
+        )
+
     setup_logging()
-    process = MainProcess(config_path=args.config)
+    process = MainProcess(config_path=config_path)
     process.start()
