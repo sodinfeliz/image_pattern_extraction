@@ -22,13 +22,15 @@ class DrawResult:
         """
         Draw the reduction result, and show on the browser.
 
+        For the features more than 2, the first two features are used.
+
         Args:
             df (pd.DataFrame): dataframe with reduced features
             reduction_method (str): name of the reduction method
         """
         trace0 = go.Scatter(
-            x=df["x"],
-            y=df["y"],
+            x=df["x1"],
+            y=df["x2"],
             mode="markers",
             marker=dict(size=4),
             customdata=df.index,
@@ -70,8 +72,8 @@ class DrawResult:
             cluster_method (str): name of the clustering method
         """
         trace0 = go.Scatter(
-            x=df_filter["x"],
-            y=df_filter["y"],
+            x=df_filter["x1"],
+            y=df_filter["x2"],
             name="cluster",
             mode="markers",
             marker=dict(
@@ -84,8 +86,8 @@ class DrawResult:
         )
 
         trace1 = go.Scatter(
-            x=df_mean["mean_x"],
-            y=df_mean["mean_y"],
+            x=df_mean["mean_x1"],
+            y=df_mean["mean_x2"],
             name="mean",
             mode="markers+text",
             marker=dict(

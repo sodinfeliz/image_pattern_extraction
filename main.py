@@ -213,10 +213,11 @@ class MainProcess:
             method=self.reduction_method, configs=self.configs["reduction"]
         )
         self.X_reduced = self.reducer.apply(self.X)
+        self.reduced_dim = self.X_reduced.shape[1]
         print("[bold chartreuse3]completed[/bold chartreuse3]")
 
         self.df = pd.DataFrame(self.X_reduced)
-        self.df.columns = ["x", "y"]
+        self.df.columns = [f"x{i+1}" for i in range(self.reduced_dim)]
 
         DrawResult.draw_reduction(self.df, reduction_method=self.reduction_method)
 
@@ -236,7 +237,7 @@ class MainProcess:
         print("[bold chartreuse3]completed[/bold chartreuse3]")
 
         self.df_mean = self.df.groupby("cluster").mean()
-        self.df_mean.columns = ["mean_x", "mean_y"]
+        self.df_mean.columns = [f"mean_x{i+1}" for i in range(self.reduced_dim)]
 
         # Separate the outliers from the clusters if DBSCAN is used
         # DBSCAN assigns outliers to cluster -1
@@ -267,14 +268,16 @@ class MainProcess:
         self.df_merge = pd.merge(
             self.df_filter, self.df_mean, how="inner", on="cluster"
         )
-        self.df_merge["dist_square"] = (
-            self.df_merge["x"] - self.df_merge["mean_x"]
-        ) ** 2 + (self.df_merge["y"] - self.df_merge["mean_y"]) ** 2
+        # Calculate squared distance across all dimensions
+        dist_square = pd.Series(0, index=self.df_merge.index)
+        for i in range(self.reduced_dim):
+            dist_square += (self.df_merge[f"x{i+1}"] - self.df_merge[f"mean_x{i+1}"]) ** 2
+        self.df_merge["dist_square"] = dist_square
 
         # Assign the original index to the merged dataframe
         self.df_merge.index = self.df_filter.index
 
-        smallest_cluster = int(self.df_merge.groupby("cluster")["x"].count().min())
+        smallest_cluster = int(self.df_merge.groupby("cluster")["x1"].count().min())
         n_smallest = output_prompt(smallest_cluster)
 
         df_rank = self.df_merge.reset_index().rename(

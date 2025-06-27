@@ -27,6 +27,7 @@ init = "pca"
 
 [reduction.UMAP]
 n_neighbors = 30
+n_components = 2
 min_dist = 0.01
 
 [clustering.K-Means]
