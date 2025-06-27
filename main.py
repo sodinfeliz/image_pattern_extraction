@@ -55,7 +55,7 @@ class MainProcess:
             "output": self.output_step,
         }
         self.extractor: Optional[FeatureExtractor] = None
-        self.step: int = 1
+        self.step: int = 1  # step starts from 1
         self.stop_process: bool = False
         self._load_configs()
 
@@ -322,6 +322,9 @@ class MainProcess:
         # override user configuration file
         with open(self.config_path, "w") as file:
             toml.dump(self.configs, file)
+
+        # copy the configuration file to the result directory
+        shutil.copy(self.config_path, self.dst_path / "config.toml")
 
         # output the final result
         df_final = self.df.copy()
