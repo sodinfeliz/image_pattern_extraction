@@ -45,7 +45,7 @@ def input_prompt(data_dir: Path, exit_keys: list) -> str:
 
     return questionary.path(
         "Input directory:",
-        get_paths=lambda: [data_dir],
+        get_paths=lambda: [str(data_dir)],
         only_directories=True,
         validate=check_dir_exists,
     ).ask()

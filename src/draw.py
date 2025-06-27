@@ -4,8 +4,8 @@ from typing import List
 import cv2
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import plotly.graph_objects as go  # type: ignore  # (plotly-stubs only supports Python 3.10+)
+from plotly.subplots import make_subplots  # type: ignore
 
 
 class DrawResult:

@@ -3,7 +3,7 @@ from typing import List
 
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import transforms
+from torchvision import transforms  # type: ignore
 
 
 class CustomImageDataset(Dataset):
@@ -35,5 +35,5 @@ class CustomImageDataset(Dataset):
             tensor_image = self.transform(image)
         return tensor_image
 
-    def get_img_paths(self) -> List[str]:
+    def get_img_paths(self) -> List[Path]:
         return self.img_paths

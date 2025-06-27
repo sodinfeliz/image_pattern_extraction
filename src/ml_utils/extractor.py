@@ -1,6 +1,7 @@
 import logging
 import sys
 from pathlib import Path
+from typing import List, Optional
 
 import numpy as np
 import torch
@@ -18,7 +19,7 @@ class FeatureExtractor:
 
     def __init__(self, configs: dict, backbone: str = "") -> None:
         self.configs: dict = configs
-        self.model: Encoder = None
+        self.model: Optional[Encoder] = None
         self.set_encoder(backbone)
 
     def set_encoder(self, backbone: str) -> None:
@@ -39,6 +40,10 @@ class FeatureExtractor:
             sys.exit(1)
 
     def _set_dataset(self, path: Path) -> CustomImageDataset:
+        if not self.model:
+            logger.exception("Model not set. Call 'set_encoder' first.")
+            sys.exit(1)
+
         return CustomImageDataset(
             main_dir=path,
             input_sz=self.configs["backbone"][self.model.backbone]["input"],
@@ -46,7 +51,7 @@ class FeatureExtractor:
             blur_sigma=self.configs["dataset"]["blur_sigma"],
         )
 
-    def extract(self, path: Path):
+    def extract(self, path: Path) -> tuple[np.ndarray, List[Path]]:
         """
         Extract the image features.
 
@@ -57,6 +62,10 @@ class FeatureExtractor:
             NDArray: (n_samples, n_features)
             list: list of images name
         """
+        if not self.model:
+            logger.exception("Model not set. Call 'set_encoder' first.")
+            sys.exit(1)
+
         dataset: CustomImageDataset = self._set_dataset(path)
         dataloader = DataLoader(
             dataset=dataset,

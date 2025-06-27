@@ -1,11 +1,12 @@
 import json
+from typing import Any
 
 from ..prompt import autocomplete_prompt, confirm_prompt, select_prompt, text_prompt
 
 
 class GeneralAlgo:
 
-    _AVAILABLE_ALGO = {}
+    _AVAILABLE_ALGO: dict[str, Any] = {}
     _ALGO_NAME = ""
 
     def __init__(self) -> None:

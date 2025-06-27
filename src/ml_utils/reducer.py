@@ -2,11 +2,11 @@ import logging
 import sys
 
 import numpy as np
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from umap import UMAP
+from sklearn.decomposition import PCA  # type: ignore
+from sklearn.manifold import TSNE  # type: ignore
+from sklearn.pipeline import Pipeline  # type: ignore
+from sklearn.preprocessing import StandardScaler  # type: ignore
+from umap import UMAP  # type: ignore
 
 from .general_algo import GeneralAlgo
 

@@ -1,5 +1,7 @@
+from typing import Optional
+
 import torch
-from torchvision.models import (
+from torchvision.models import (  # type: ignore
     EfficientNet_B0_Weights,
     MobileNet_V3_Small_Weights,
     ResNet101_Weights,
@@ -15,7 +17,7 @@ class Encoder:
 
     def __init__(self, backbone: str = "ResNet") -> None:
         self._backbone = ""
-        self._model = None
+        self._model: Optional[torch.nn.Module] = None
         self._device = None
         self.set_backbone(backbone)
 
@@ -29,7 +31,7 @@ class Encoder:
     @backbone.setter
     def backbone(self, _):
         raise AttributeError(
-            f"Directly modification of backbone disabled, using 'set_backbone' instead."
+            "Directly modification of backbone disabled, using 'set_backbone' instead."
         )
 
     def get_device(self):
@@ -53,6 +55,10 @@ class Encoder:
                 self._model = mobilenet_v3_small(
                     weights=MobileNet_V3_Small_Weights.DEFAULT
                 )
+
+            if self._model is None:
+                raise ValueError("Model setting failed. Please check the backbone.")
+
             self._model.fc = torch.nn.Identity()
         except Exception as e:
             raise e
