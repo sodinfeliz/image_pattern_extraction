@@ -69,17 +69,13 @@ class MainProcess:
             with open(self.config_path, "r") as file:
                 self.original_configs = toml.load(file)  # for rollback
                 self.configs = copy.deepcopy(self.original_configs)
+
             self.data_dir = Path(self.configs["global_settings"]["data_dir"])
             self.result_dir = Path(self.configs["global_settings"]["result_dir"])
         except FileNotFoundError:
-            logger.exception(f"Can't find the configuration file: {self.config_path}")
-            sys.exit(1)
+            self._exit_process(f"Can't find the configuration file: {self.config_path}", rollback=False)
         except KeyError as error:
-            logger.exception(
-                f"KeyError: The key '{error.args[0]}' is missing"
-                + f"from global_settings in {self.config_path}."
-            )
-            sys.exit(1)
+            self._exit_process(f"KeyError: The key '{error.args[0]}' is missing from global_settings in configuration file", rollback=False)
 
         self._hline(" Load configurations ")
         print("Configuration file: ", self.config_path)
@@ -90,13 +86,9 @@ class MainProcess:
             with open(self.config_path, "w") as file:
                 toml.dump(self.configs, file)
         except FileNotFoundError:
-            logger.exception(f"Can't find the configuration file: {self.config_path}")
-            self._rollback_configs()
-            sys.exit(1)
+            self._exit_process(f"Can't find the configuration file: {str(self.config_path)}")
         except Exception as e:
-            logger.exception(f"Error updating the configuration file: {e}")
-            self._rollback_configs()
-            sys.exit(1)
+            self._exit_process(f"Error updating the configuration file: {e}")
 
     def _rollback_configs(self):
         """Rollback the user configurations to the previous settings."""
@@ -104,8 +96,7 @@ class MainProcess:
             with open(self.config_path, "w") as file:
                 toml.dump(self.original_configs, file)
         except Exception as e:
-            logger.exception(f"Error when rolling back the configuration file: {e}")
-            sys.exit(1)
+            self._exit_process(f"Error when rolling back the configuration file: {e}", rollback=False)
 
     #############################
     # Main process related
@@ -131,8 +122,7 @@ class MainProcess:
                 else:
                     self._hline(" Process completed ")
         except Exception as e:
-            logger.exception(f"Error: {e}")
-            self._rollback_configs()
+            self._exit_process(f"An error occurred during the process: {e}")
 
     def _proceed(self):
         """Handles the navigation between steps."""
@@ -179,8 +169,7 @@ class MainProcess:
     def input_step(self):
         """Input step: Select the data directory."""
         if (first_dirname := first_subdirectory(self.data_dir)) is None:
-            logger.exception("There's no available image data.")
-            sys.exit(1)
+            self._exit_process("There's no available image data.", rollback=False)
 
         self.dirname = input_prompt(
             data_dir=self.data_dir,
@@ -340,6 +329,22 @@ class MainProcess:
         df_final.to_csv(self.dst_path / "result.csv", index=False)
 
         open_directory(self.dst_path)
+
+    #############################
+    # Exit related
+    #############################
+
+    def _exit_process(
+        self,
+        error_message: Optional[str] = None,
+        rollback: bool = True,
+    ):
+        """Exit the process with an error."""
+        if error_message:
+            logger.exception(error_message)
+        if rollback:
+            self._rollback_configs()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
